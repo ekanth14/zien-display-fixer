@@ -21,7 +21,7 @@ public static class ServiceRegistration
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            services.AddSingleton<IDisplayService, LinuxDisplayServiceStub>();
+            services.AddSingleton<IDisplayService, LinuxDisplayService>();
         }
         else
         {

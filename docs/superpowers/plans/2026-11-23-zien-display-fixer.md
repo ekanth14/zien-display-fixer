@@ -172,24 +172,24 @@
 - Consumes: `IDisplayService`
 - Produces: `X11Parser.ParseXRandrQuery(string output)`, `LinuxDisplayService : IDisplayService`
 
-- [ ] **Step 1: Write failing unit test for `X11Parser`**
+- [x] **Step 1: Write failing unit test for `X11Parser`**
   Test parsing sample `xrandr --query` text: extracts display names, connected status, primary flag, current resolution/rate, and list of supported modes.
 
-- [ ] **Step 2: Implement `X11Parser`**
+- [x] **Step 2: Implement `X11Parser`**
   Pure C# regex and text parser for `xrandr` outputs. Run test to verify pass.
 
-- [ ] **Step 3: Implement `LinuxDisplayService`**
+- [x] **Step 3: Implement `LinuxDisplayService`**
   Detect session using `Environment.GetEnvironmentVariable("XDG_SESSION_TYPE")`.
   - On X11: execute `xrandr` process commands.
   - On Wayland: probe `wlr-randr`, `kscreen-doctor`, and `org.gnome.Mutter.DisplayConfig` D-Bus.
   - If unsupported, return a clean failure result (`IsSuccess = false, ErrorMessage = "Not supported on this desktop"`).
   - Background polling timer (2.0s interval) checking output signature hash to raise `DisplaysChanged`.
 
-- [ ] **Step 4: Verify build and parser tests**
+- [x] **Step 4: Verify build and parser tests**
   Run: `dotnet test --filter FullyQualifiedName~X11ParserTests`
   Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
   ```bash
   git add src/ZienDisplayFixer.Core/Linux/ src/ZienDisplayFixer.App/Services/Linux/ tests/ZienDisplayFixer.Tests/Linux/
   git commit -m "feat: implement LinuxDisplayService with X11 parser and Wayland fallbacks"
