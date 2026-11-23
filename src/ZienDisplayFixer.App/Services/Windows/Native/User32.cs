@@ -90,3 +90,4 @@ public struct DISPLAY_DEVICEW
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
     public string DeviceKey;
 }
+

@@ -162,13 +162,8 @@ public class WindowsDisplayService : IDisplayService, IDisposable
         devMode.dmPelsWidth = (uint)mode.Width;
         devMode.dmPelsHeight = (uint)mode.Height;
         devMode.dmDisplayFrequency = (uint)Math.Round(mode.RefreshHz);
-        devMode.dmFields = User32.DM_PELSWIDTH | User32.DM_PELSHEIGHT | User32.DM_DISPLAYFREQUENCY;
-
-        if (mode.IsInterlaced)
-        {
-            devMode.dmDisplayFlags |= User32.DM_INTERLACED;
-            devMode.dmFields |= User32.DM_DISPLAYFLAGS;
-        }
+        devMode.dmFields = User32.DM_PELSWIDTH | User32.DM_PELSHEIGHT | User32.DM_DISPLAYFREQUENCY | User32.DM_DISPLAYFLAGS;
+        devMode.dmDisplayFlags = mode.IsInterlaced ? User32.DM_INTERLACED : 0;
 
         int result = User32.ChangeDisplaySettingsEx(displayId, ref devMode, IntPtr.Zero, User32.CDS_TEST, IntPtr.Zero);
         return Task.FromResult(result == User32.DISP_CHANGE_SUCCESSFUL);
@@ -189,9 +184,10 @@ public class WindowsDisplayService : IDisplayService, IDisposable
 
         lock (_snapshotLock)
         {
+            _previousModesSnapshot.Clear();
             foreach (var d in displays)
             {
-                if (d.CurrentMode != null && !_previousModesSnapshot.ContainsKey(d.Id))
+                if (d.CurrentMode != null)
                 {
                     _previousModesSnapshot[d.Id] = new DisplaySnapshot(
                         d.Id,
@@ -214,13 +210,8 @@ public class WindowsDisplayService : IDisplayService, IDisposable
             devMode.dmDisplayFrequency = target.TargetRefreshHz;
             devMode.dmPositionX = target.PositionX;
             devMode.dmPositionY = target.PositionY;
-            devMode.dmFields = User32.DM_PELSWIDTH | User32.DM_PELSHEIGHT | User32.DM_DISPLAYFREQUENCY | User32.DM_POSITION;
-
-            if (target.IsInterlaced)
-            {
-                devMode.dmDisplayFlags |= User32.DM_INTERLACED;
-                devMode.dmFields |= User32.DM_DISPLAYFLAGS;
-            }
+            devMode.dmFields = User32.DM_PELSWIDTH | User32.DM_PELSHEIGHT | User32.DM_DISPLAYFREQUENCY | User32.DM_POSITION | User32.DM_DISPLAYFLAGS;
+            devMode.dmDisplayFlags = target.IsInterlaced ? User32.DM_INTERLACED : 0;
 
             uint flags = User32.CDS_UPDATEREGISTRY | User32.CDS_NORESET;
             if (target.IsPrimary)
@@ -265,13 +256,8 @@ public class WindowsDisplayService : IDisplayService, IDisposable
             devMode.dmDisplayFrequency = (uint)Math.Round(s.Mode.RefreshHz);
             devMode.dmPositionX = s.PositionX;
             devMode.dmPositionY = s.PositionY;
-            devMode.dmFields = User32.DM_PELSWIDTH | User32.DM_PELSHEIGHT | User32.DM_DISPLAYFREQUENCY | User32.DM_POSITION;
-
-            if (s.Mode.IsInterlaced)
-            {
-                devMode.dmDisplayFlags |= User32.DM_INTERLACED;
-                devMode.dmFields |= User32.DM_DISPLAYFLAGS;
-            }
+            devMode.dmFields = User32.DM_PELSWIDTH | User32.DM_PELSHEIGHT | User32.DM_DISPLAYFREQUENCY | User32.DM_POSITION | User32.DM_DISPLAYFLAGS;
+            devMode.dmDisplayFlags = s.Mode.IsInterlaced ? User32.DM_INTERLACED : 0;
 
             uint flags = User32.CDS_UPDATEREGISTRY | User32.CDS_NORESET;
             if (s.IsPrimary)
@@ -351,31 +337,32 @@ public class WindowsDisplayService : IDisplayService, IDisposable
             return targets;
         }
 
-        // Re-tile displays left-to-right maintaining original index order
-        var retiled = new List<DisplayTargetLayout>(targets.Count);
+        // Re-tile displays left-to-right maintaining original spatial order
+        var sortedTargets = targets.OrderBy(t => t.PositionX).ToList();
+        var retiled = new List<DisplayTargetLayout>(sortedTargets.Count);
         int currentX = 0;
         int primaryIndex = -1;
 
-        for (int i = 0; i < targets.Count; i++)
+        for (int i = 0; i < sortedTargets.Count; i++)
         {
-            if (targets[i].IsPrimary)
+            if (sortedTargets[i].IsPrimary)
             {
                 primaryIndex = i;
             }
         }
         if (primaryIndex < 0) primaryIndex = 0;
 
-        var relativePositions = new int[targets.Count];
-        for (int i = 0; i < targets.Count; i++)
+        var relativePositions = new int[sortedTargets.Count];
+        for (int i = 0; i < sortedTargets.Count; i++)
         {
             relativePositions[i] = currentX;
-            currentX += targets[i].TargetWidth;
+            currentX += sortedTargets[i].TargetWidth;
         }
 
         int primaryOffset = relativePositions[primaryIndex];
-        for (int i = 0; i < targets.Count; i++)
+        for (int i = 0; i < sortedTargets.Count; i++)
         {
-            var t = targets[i];
+            var t = sortedTargets[i];
             retiled.Add(t with
             {
                 PositionX = relativePositions[i] - primaryOffset,
