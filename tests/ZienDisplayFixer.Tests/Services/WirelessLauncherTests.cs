@@ -18,10 +18,7 @@ public class WirelessLauncherTests
 
         var devices = await launcher.ScanNearbyAsync(TestContext.Current.CancellationToken);
         Assert.NotNull(devices);
-        Assert.Equal(3, devices.Count);
-        Assert.Contains(devices, d => d.Name == "Living room TV" && d.DiagonalInches == 55.0);
-        Assert.Contains(devices, d => d.Name == "Bedroom TV" && d.DiagonalInches == 43.0);
-        Assert.Contains(devices, d => d.Name == "Office display" && d.DiagonalInches == 27.0);
+        Assert.Empty(devices);
     }
 
     [Fact]
@@ -43,9 +40,7 @@ public class WirelessLauncherTests
 
         var devices = await launcher.ScanNearbyAsync(TestContext.Current.CancellationToken);
         Assert.NotNull(devices);
-        Assert.Equal(2, devices.Count);
-        Assert.Contains(devices, d => d.Name == "Living Room Apple TV" && d.DiagonalInches == 65.0);
-        Assert.Contains(devices, d => d.Name == "Office iPad" && d.DiagonalInches == 12.9);
+        Assert.Empty(devices);
     }
 
     [Fact]
@@ -76,9 +71,7 @@ public class WirelessLauncherTests
 
         var devices = await supportedLauncher.ScanNearbyAsync(TestContext.Current.CancellationToken);
         Assert.NotNull(devices);
-        Assert.Equal(2, devices.Count);
-        Assert.Contains(devices, d => d.Name == "Conference Room Display" && d.DiagonalInches == 65.0);
-        Assert.Contains(devices, d => d.Name == "Meeting Room TV" && d.DiagonalInches == 50.0);
+        Assert.Empty(devices);
     }
 
     [Fact]

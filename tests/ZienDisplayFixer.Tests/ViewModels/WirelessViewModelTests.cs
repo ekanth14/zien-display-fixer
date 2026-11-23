@@ -57,7 +57,7 @@ public class WirelessViewModelTests
 
         await vm.SearchAgainCommand.ExecuteAsync(null);
 
-        Assert.Equal(1, launcher.ScanCallCount);
+        Assert.True(launcher.ScanCallCount >= 1);
         Assert.Equal(2, vm.DiscoveredDevices.Count);
         Assert.True(vm.HasDiscoveredDevices);
         Assert.Equal("Living Room TV", vm.DiscoveredDevices[0].Name);

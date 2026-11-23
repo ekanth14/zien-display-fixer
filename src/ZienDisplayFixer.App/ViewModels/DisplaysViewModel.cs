@@ -247,8 +247,16 @@ public partial class DisplaysViewModel : ViewModelBase
 
         if (_setupState != null)
         {
-            _setupState.WallpaperBrush = WallpaperBrush;
-            _setupState.SelectedWallpaperPreset = SelectedWallpaperPreset;
+            _isSyncing = true;
+            try
+            {
+                _setupState.WallpaperBrush = WallpaperBrush;
+                _setupState.SelectedWallpaperPreset = SelectedWallpaperPreset;
+            }
+            finally
+            {
+                _isSyncing = false;
+            }
         }
     }
 
@@ -272,8 +280,16 @@ public partial class DisplaysViewModel : ViewModelBase
 
                 if (_setupState != null)
                 {
-                    _setupState.WallpaperBrush = WallpaperBrush;
-                    _setupState.SelectedWallpaperPreset = "System";
+                    _isSyncing = true;
+                    try
+                    {
+                        _setupState.WallpaperBrush = WallpaperBrush;
+                        _setupState.SelectedWallpaperPreset = "System";
+                    }
+                    finally
+                    {
+                        _isSyncing = false;
+                    }
                 }
             }
             else

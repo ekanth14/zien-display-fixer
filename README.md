@@ -2,6 +2,24 @@
 
 > **A calm, ultra-refined multi-display optimizer for Windows, macOS, and Linux.**
 
+![Zien Display Fixer Workspace](docs/images/screenshot-home.png)
+
+---
+
+## Visual Gallery
+
+| Desk Scene & One-Click Fix | Hardware Displays Specification |
+| :---: | :---: |
+| ![Home Screen](docs/images/screenshot-home.png) | ![Displays View](docs/images/screenshot-displays.png) |
+
+| System Architecture & Native Layers | Background Automation & Preferences |
+| :---: | :---: |
+| ![System Architecture](docs/images/architecture-diagram.svg) | ![Settings View](docs/images/screenshot-settings.png) |
+
+### Vector Desk Stage Close-up
+
+![Vector Desk Stage](docs/images/screenshot-desk-stage.png)
+
 ---
 
 ## Overview & Design Philosophy
