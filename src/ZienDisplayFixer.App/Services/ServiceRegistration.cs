@@ -17,7 +17,7 @@ public static class ServiceRegistration
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            services.AddSingleton<IDisplayService, MacDisplayServiceStub>();
+            services.AddSingleton<IDisplayService, MacDisplayService>();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {

@@ -137,23 +137,23 @@
 - Consumes: `IDisplayService`
 - Produces: `MacDisplayService : IDisplayService`
 
-- [ ] **Step 1: Define CoreGraphics P/Invoke bindings**
+- [x] **Step 1: Define CoreGraphics P/Invoke bindings**
   Declare `CGGetActiveDisplayList`, `CGDisplayCopyAllDisplayModes`, `CGDisplayModeGetWidth`, `CGDisplayModeGetHeight`, `CGDisplayModeGetRefreshRate`, `CGBeginDisplayConfiguration`, `CGConfigureDisplayWithDisplayMode`, `CGCompleteDisplayConfiguration`, and `CGDisplayRegisterReconfigurationCallback`.
   Include `kCGDisplayShowDuplicateLowResolutionModes` in options dictionary.
 
-- [ ] **Step 2: Implement display and mode enumeration**
+- [x] **Step 2: Implement display and mode enumeration**
   Query active display IDs, enumerate display modes. Treat refresh rate of 0 as 60 Hz.
 
-- [ ] **Step 3: Implement mode configuration & restore**
+- [x] **Step 3: Implement mode configuration & restore**
   Use `CGBeginDisplayConfiguration`, `CGConfigureDisplayWithDisplayMode`, and `CGCompleteDisplayConfiguration(..., CGConfigureOption.ForSession)`. Keep snapshot for rollback.
 
-- [ ] **Step 4: Register reconfiguration callback**
+- [x] **Step 4: Register reconfiguration callback**
   Pin callback delegate with `GCHandle.Alloc` to prevent garbage collection and raise `DisplaysChanged`.
 
-- [ ] **Step 5: Verify build**
+- [x] **Step 5: Verify build**
   Run: `dotnet build`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   ```bash
   git add src/ZienDisplayFixer.App/Services/MacOS/
   git commit -m "feat: implement MacDisplayService with CoreGraphics P/Invoke"
