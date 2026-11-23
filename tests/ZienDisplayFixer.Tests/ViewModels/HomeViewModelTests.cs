@@ -130,6 +130,47 @@ public class HomeViewModelTests
     }
 
     [Fact]
+    public async Task StatusText_WhenSingleScreenLaptopCanBeImproved_ShowsYourDisplayCanBeImproved()
+    {
+        var displayService = new FakeDisplayService
+        {
+            Displays =
+            [
+                new DisplayInfo(
+                    id: "builtin",
+                    name: "Internal Display",
+                    model: "Internal Display",
+                    isPrimary: true,
+                    positionX: 0,
+                    positionY: 0,
+                    currentMode: new DisplayMode(1280, 720, 60.0, false), // Suboptimal
+                    physicalWidthMm: 310,
+                    physicalHeightMm: 174,
+                    connection: ConnectionType.Unknown)
+            ],
+            Modes = new()
+            {
+                ["builtin"] =
+                [
+                    new DisplayMode(1280, 720, 60.0, false),
+                    new DisplayMode(1920, 1080, 60.0, false)
+                ]
+            }
+        };
+
+        var edidReader = new FakeEdidReader();
+        var screenMode = new FakeScreenModeService();
+        var vm = new HomeViewModel(displayService, edidReader, screenMode)
+        {
+            DeviceType = DeviceType.Laptop
+        };
+
+        await vm.LoadDisplaysAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal("Your display can be improved", vm.StatusText);
+    }
+
+    [Fact]
     public async Task StatusText_WhenDisplaysCanBeImproved_ShowsCorrectCount()
     {
         var displayService = new FakeDisplayService
@@ -268,12 +309,16 @@ public class HomeViewModelTests
         Assert.Single(displayService.AppliedModes);
         Assert.Equal(2560, displayService.AppliedModes[0].Mode.Width);
         Assert.True(vm.IsConfirmationVisible);
+        Assert.False(vm.CanFixScreens);
+        Assert.False(vm.FixScreensCommand.CanExecute(null));
         Assert.NotNull(vm.Confirmation);
         Assert.Equal(12, vm.Confirmation.RemainingSeconds);
 
         // Keep confirmation
         vm.Confirmation.KeepCommand.Execute(null);
         Assert.False(vm.IsConfirmationVisible);
+        Assert.True(vm.CanFixScreens);
+        Assert.True(vm.FixScreensCommand.CanExecute(null));
     }
 
     [Fact]

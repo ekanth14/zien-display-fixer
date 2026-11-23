@@ -94,3 +94,4 @@ public class MacScreenModeService : IScreenModeService
         return Task.CompletedTask;
     }
 }
+

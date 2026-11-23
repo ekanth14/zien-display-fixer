@@ -38,6 +38,8 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
     private ScreenTopology _currentTopology = ScreenTopology.Extend;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanFixScreens))]
+    [NotifyCanExecuteChangedFor(nameof(FixScreensCommand))]
     private bool _isConfirmationVisible;
 
     [ObservableProperty]
@@ -48,6 +50,7 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanFixScreens))]
+    [NotifyCanExecuteChangedFor(nameof(FixScreensCommand))]
     private bool _isFixing;
 
     public bool CanFixScreens => !IsFixing && !IsConfirmationVisible;
@@ -83,13 +86,13 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
     {
         if (_displayService == null)
         {
-            StatusText = "No display service available";
+            RunOnUIThread(() => StatusText = "No display service available");
             return;
         }
 
         try
         {
-            ErrorMessage = null;
+            RunOnUIThread(() => ErrorMessage = null);
             var rawDisplays = await _displayService.GetDisplaysAsync(ct).ConfigureAwait(false);
             var enriched = new List<DisplayInfo>();
 
@@ -163,13 +166,7 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
     {
         if (displays.Count == 0)
         {
-            RunOnUIThread(() => StatusText = "No external displays connected");
-            return;
-        }
-
-        if (DeviceType == DeviceType.Laptop && displays.Count <= 1)
-        {
-            RunOnUIThread(() => StatusText = "No external displays connected");
+            RunOnUIThread(() => StatusText = "No displays detected");
             return;
         }
 
@@ -212,18 +209,32 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
 
         RunOnUIThread(() =>
         {
-            if (improvableCount == 0)
+            if (improvableCount > 0)
             {
-                StatusText = "All displays are at their best settings";
+                if (displays.Count == 1)
+                {
+                    StatusText = "Your display can be improved";
+                }
+                else
+                {
+                    StatusText = $"{improvableCount} of {displays.Count} displays can be improved";
+                }
             }
             else
             {
-                StatusText = $"{improvableCount} of {displays.Count} displays can be improved";
+                if (DeviceType == DeviceType.Laptop && displays.Count == 1)
+                {
+                    StatusText = "No external displays connected";
+                }
+                else
+                {
+                    StatusText = "All displays are at their best settings";
+                }
             }
         });
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanFixScreens))]
     public async Task FixScreensAsync()
     {
         if (_displayService == null || Displays.Count == 0 || IsFixing)
@@ -231,8 +242,11 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        IsFixing = true;
-        ErrorMessage = null;
+        RunOnUIThread(() =>
+        {
+            IsFixing = true;
+            ErrorMessage = null;
+        });
 
         try
         {
@@ -258,7 +272,7 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
 
             if (modesToApply.Count == 0)
             {
-                StatusText = "All displays are at their best settings";
+                RunOnUIThread(() => StatusText = "All displays are at their best settings");
                 return;
             }
 
@@ -268,7 +282,7 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
                 bool testPassed = await _displayService.TestModeAsync(display.Id, targetMode).ConfigureAwait(false);
                 if (!testPassed)
                 {
-                    ErrorMessage = $"Mode {targetMode.Width}x{targetMode.Height} rejected by display driver.";
+                    RunOnUIThread(() => ErrorMessage = $"Mode {targetMode.Width}x{targetMode.Height} rejected by display driver.");
                     return;
                 }
             }
@@ -305,11 +319,11 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Failed to apply optimal display modes: {ex.Message}";
+            RunOnUIThread(() => ErrorMessage = $"Failed to apply optimal display modes: {ex.Message}");
         }
         finally
         {
-            IsFixing = false;
+            RunOnUIThread(() => IsFixing = false);
         }
     }
 
@@ -324,7 +338,7 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Failed to revert display modes: {ex.Message}";
+            RunOnUIThread(() => ErrorMessage = $"Failed to revert display modes: {ex.Message}");
         }
     }
 
@@ -355,7 +369,7 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Failed to switch screen topology: {ex.Message}";
+                RunOnUIThread(() => ErrorMessage = $"Failed to switch screen topology: {ex.Message}");
             }
         }
     }

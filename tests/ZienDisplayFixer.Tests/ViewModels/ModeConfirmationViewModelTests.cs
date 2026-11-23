@@ -64,3 +64,4 @@ public class ModeConfirmationViewModelTests
         Assert.True(revertInvoked);
     }
 }
+
