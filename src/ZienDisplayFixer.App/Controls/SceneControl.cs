@@ -257,7 +257,7 @@ public class SceneControl : Control
 
             // Screen inner panel
             var innerScreen = lidRect.Deflate(4.0);
-            context.DrawRectangle(DefaultScreenGradient, null, innerScreen, 4, 4);
+            context.DrawRectangle(WallpaperBrush ?? DefaultScreenGradient, null, innerScreen, 4, 4);
 
             // Host laptop display number "1"
             double fontSize = Math.Clamp(innerScreen.Height * 0.36, 16.0, 36.0);

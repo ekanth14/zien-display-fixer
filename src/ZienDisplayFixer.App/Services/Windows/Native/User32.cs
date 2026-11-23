@@ -38,6 +38,16 @@ public static class User32
 
     public const uint DM_INTERLACED = 0x00000002;
 
+    public const uint SPI_GETDESKWALLPAPER = 0x0073;
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool SystemParametersInfo(
+        uint uAction,
+        uint uParam,
+        System.Text.StringBuilder lpvParam,
+        uint fuWinIni);
+
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool EnumDisplayDevices(

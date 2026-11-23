@@ -3,15 +3,297 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:ZienDisplayFixer.App.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+             xmlns:conv="using:ZienDisplayFixer.App.Converters"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="700"
              x:Class="ZienDisplayFixer.App.Views.DisplaysView"
              x:DataType="vm:DisplaysViewModel">
-    <Grid Margin="32">
-        <Border Classes="Card" Padding="32" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <StackPanel Spacing="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Classes="PageTitle" Text="Connected Displays" HorizontalAlignment="Center" />
-                <TextBlock Classes="Muted" Text="Manage individual display settings, resolutions, and refresh rates." HorizontalAlignment="Center" />
-            </StackPanel>
-        </Border>
-    </Grid>
+
+    <UserControl.Resources>
+        <conv:EqualityToBooleanConverter x:Key="EqualConverter" />
+
+        <LinearGradientBrush x:Key="DuskSwatch" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#6A5A8E" Offset="0.0" />
+            <GradientStop Color="#1B1630" Offset="1.0" />
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="DuneSwatch" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#B9966B" Offset="0.0" />
+            <GradientStop Color="#2E2218" Offset="1.0" />
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="MistSwatch" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#8FA3AD" Offset="0.0" />
+            <GradientStop Color="#1F2830" Offset="1.0" />
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="GraphiteSwatch" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#3A3F4C" Offset="0.0" />
+            <GradientStop Color="#0D0F13" Offset="1.0" />
+        </LinearGradientBrush>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Button.Swatch">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="CornerRadius" Value="17" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="BorderBrush" Value="#27272D" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.Swatch:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource AppMuted}" />
+        </Style>
+        <Style Selector="Button.Swatch.Active">
+            <Setter Property="BorderBrush" Value="{DynamicResource AppAccent}" />
+        </Style>
+        <Style Selector="Button.RemoveBtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource AppMuted}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.RemoveBtn:pointerover">
+            <Setter Property="Foreground" Value="#E06C75" />
+            <Setter Property="Background" Value="#20E06C75" />
+        </Style>
+        <Style Selector="Button.Pill.Active">
+            <Setter Property="BorderBrush" Value="{DynamicResource AppAccent}" />
+            <Setter Property="Foreground" Value="{DynamicResource AppAccent}" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="24" HorizontalAlignment="Stretch" MaxWidth="840">
+            <Border Classes="Card"
+                    Padding="28"
+                    HorizontalAlignment="Stretch">
+                <StackPanel Spacing="24">
+                    <!-- Section Title -->
+                    <TextBlock Text="Your setup"
+                               FontSize="22"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource AppText}" />
+
+                    <!-- Device Selection & Screen Size Grid -->
+                    <Grid ColumnDefinitions="Auto,32,Auto" VerticalAlignment="Center">
+                        <!-- Device Field -->
+                        <StackPanel Grid.Column="0" Spacing="8">
+                            <TextBlock Text="Your device" Classes="Muted" FontSize="13" />
+                            <Border Classes="SegmentedGroup" HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal" Spacing="2">
+                                    <Button Classes="SegmentedItem"
+                                            Classes.Active="{Binding DeviceType, Converter={StaticResource EqualConverter}, ConverterParameter=Laptop}"
+                                            Content="Laptop"
+                                            Command="{Binding SetDeviceTypeCommand}"
+                                            CommandParameter="Laptop" />
+                                    <Button Classes="SegmentedItem"
+                                            Classes.Active="{Binding DeviceType, Converter={StaticResource EqualConverter}, ConverterParameter=Pc}"
+                                            Content="PC"
+                                            Command="{Binding SetDeviceTypeCommand}"
+                                            CommandParameter="Pc" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Laptop Screen Size (hidden when PC) -->
+                        <StackPanel Grid.Column="2"
+                                    Spacing="8"
+                                    IsVisible="{Binding IsLaptop}">
+                            <TextBlock Text="Laptop screen size" Classes="Muted" FontSize="13" />
+                            <ComboBox ItemsSource="{Binding LaptopScreenSizes}"
+                                      SelectedItem="{Binding SelectedLaptopScreenSize}"
+                                      Width="130">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding StringFormat='{}{0}&quot;'}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Divider -->
+                    <Rectangle Height="1" Fill="{DynamicResource AppBorder}" />
+
+                    <!-- Wallpaper Field -->
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Wallpaper" Classes="Muted" FontSize="13" />
+                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <!-- 4 Gradient Presets -->
+                            <Button Classes="Swatch"
+                                    Classes.Active="{Binding SelectedWallpaperPreset, Converter={StaticResource EqualConverter}, ConverterParameter=Dusk}"
+                                    Background="{StaticResource DuskSwatch}"
+                                    Command="{Binding SelectWallpaperPresetCommand}"
+                                    CommandParameter="Dusk"
+                                    ToolTip.Tip="Dusk" />
+                            <Button Classes="Swatch"
+                                    Classes.Active="{Binding SelectedWallpaperPreset, Converter={StaticResource EqualConverter}, ConverterParameter=Dune}"
+                                    Background="{StaticResource DuneSwatch}"
+                                    Command="{Binding SelectWallpaperPresetCommand}"
+                                    CommandParameter="Dune"
+                                    ToolTip.Tip="Dune" />
+                            <Button Classes="Swatch"
+                                    Classes.Active="{Binding SelectedWallpaperPreset, Converter={StaticResource EqualConverter}, ConverterParameter=Mist}"
+                                    Background="{StaticResource MistSwatch}"
+                                    Command="{Binding SelectWallpaperPresetCommand}"
+                                    CommandParameter="Mist"
+                                    ToolTip.Tip="Mist" />
+                            <Button Classes="Swatch"
+                                    Classes.Active="{Binding SelectedWallpaperPreset, Converter={StaticResource EqualConverter}, ConverterParameter=Graphite}"
+                                    Background="{StaticResource GraphiteSwatch}"
+                                    Command="{Binding SelectWallpaperPresetCommand}"
+                                    CommandParameter="Graphite"
+                                    ToolTip.Tip="Graphite" />
+
+                            <!-- OS Wallpaper Button -->
+                            <Button Classes="Pill"
+                                    Classes.Active="{Binding SelectedWallpaperPreset, Converter={StaticResource EqualConverter}, ConverterParameter=System}"
+                                    Content="System"
+                                    Command="{Binding UseSystemWallpaperCommand}"
+                                    Margin="12,0,0,0"
+                                    ToolTip.Tip="Use system wallpaper" />
+
+                            <!-- Custom Upload Button -->
+                            <Button Classes="Pill"
+                                    Classes.Active="{Binding SelectedWallpaperPreset, Converter={StaticResource EqualConverter}, ConverterParameter=Upload}"
+                                    Content="Upload"
+                                    Command="{Binding UploadWallpaperCommand}"
+                                    ToolTip.Tip="Upload custom wallpaper image" />
+                        </StackPanel>
+
+                        <!-- Hint Text -->
+                        <TextBlock Text="{Binding WallpaperHintText}"
+                                   Classes="Muted"
+                                   FontSize="12"
+                                   Margin="0,2,0,0" />
+                    </StackPanel>
+
+                    <!-- Divider -->
+                    <Rectangle Height="1" Fill="{DynamicResource AppBorder}" />
+
+                    <!-- Displays Header & Add Button -->
+                    <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                        <StackPanel Grid.Column="0" Spacing="2">
+                            <TextBlock Text="Displays"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource AppText}" />
+                            <TextBlock Text="Manage connected monitors, dimensions, and ports"
+                                       Classes="Muted"
+                                       FontSize="12" />
+                        </StackPanel>
+
+                        <Button Grid.Column="1"
+                                Classes="Pill"
+                                Content="+ Add"
+                                Command="{Binding AddDisplayCommand}"
+                                IsEnabled="{Binding CanAddDisplay}"
+                                ToolTip.Tip="Add display (up to 8)" />
+                    </Grid>
+
+                    <!-- Connected Displays List -->
+                    <ItemsControl ItemsSource="{Binding DisplayItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:DisplayItemViewModel">
+                                <Border Background="#16161B"
+                                        BorderBrush="{DynamicResource AppBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="16"
+                                        Padding="20"
+                                        Margin="0,0,0,14">
+                                    <StackPanel Spacing="14">
+                                        <!-- Card Header: Title + Remove Button -->
+                                        <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                            <Border Grid.Column="0"
+                                                    Background="{DynamicResource AppBorder}"
+                                                    CornerRadius="6"
+                                                    Padding="6,2"
+                                                    Margin="0,0,10,0"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding DisplayNumberText}"
+                                                           FontWeight="Bold"
+                                                           FontSize="12"
+                                                           Foreground="{DynamicResource AppAccent}" />
+                                            </Border>
+
+                                            <TextBox Grid.Column="1"
+                                                     Text="{Binding Name}"
+                                                     FontWeight="SemiBold"
+                                                     FontSize="15"
+                                                     Foreground="{DynamicResource AppText}"
+                                                     Background="Transparent"
+                                                     BorderThickness="0"
+                                                     Padding="0"
+                                                     VerticalAlignment="Center" />
+
+                                            <Button Grid.Column="2"
+                                                    Classes="RemoveBtn"
+                                                    Content="&#x2715;"
+                                                    Command="{Binding RemoveCommand}"
+                                                    ToolTip.Tip="Remove display" />
+                                        </Grid>
+
+                                        <!-- Diagonal Size Slider -->
+                                        <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                            <TextBlock Grid.Column="0"
+                                                       Text="Size"
+                                                       Classes="Muted"
+                                                       FontSize="13"
+                                                       VerticalAlignment="Center"
+                                                       Width="50" />
+                                            <Slider Grid.Column="1"
+                                                    Minimum="13"
+                                                    Maximum="65"
+                                                    Value="{Binding DiagonalInches}"
+                                                    IsSnapToTickEnabled="True"
+                                                    TickFrequency="1"
+                                                    VerticalAlignment="Center"
+                                                    Margin="10,0" />
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{Binding DiagonalInches, StringFormat='{}{0:F0}&quot;'}"
+                                                       FontWeight="SemiBold"
+                                                       FontSize="14"
+                                                       Foreground="{DynamicResource AppText}"
+                                                       VerticalAlignment="Center"
+                                                       Width="40"
+                                                       TextAlignment="Right" />
+                                        </Grid>
+
+                                        <!-- Aspect Ratio and Connection Dropdowns -->
+                                        <Grid ColumnDefinitions="*,16,*" Margin="0,4,0,0">
+                                            <!-- Aspect Ratio -->
+                                            <StackPanel Grid.Column="0" Spacing="6">
+                                                <TextBlock Text="Aspect ratio" Classes="Muted" FontSize="12" />
+                                                <ComboBox ItemsSource="{Binding AspectRatioOptions}"
+                                                          SelectedItem="{Binding AspectRatio}"
+                                                          HorizontalAlignment="Stretch" />
+                                            </StackPanel>
+
+                                            <!-- Connection -->
+                                            <StackPanel Grid.Column="2" Spacing="6">
+                                                <TextBlock Text="Connection" Classes="Muted" FontSize="12" />
+                                                <ComboBox ItemsSource="{Binding ConnectionOptions}"
+                                                          SelectedItem="{Binding Connection}"
+                                                          HorizontalAlignment="Stretch" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- Native Mode Info -->
+                                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2,0,0">
+                                            <TextBlock Text="Native mode:" Classes="Muted" FontSize="12" />
+                                            <TextBlock Text="{Binding NativeModeText}"
+                                                       Foreground="{DynamicResource AppMuted}"
+                                                       FontWeight="Medium"
+                                                       FontSize="12" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
 </UserControl>

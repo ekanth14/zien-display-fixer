@@ -18,23 +18,29 @@ public static class ServiceRegistration
             services.AddSingleton<IDisplayService, WindowsDisplayService>();
             services.AddSingleton<IEdidReader, WindowsEdidReader>();
             services.AddSingleton<IScreenModeService, WindowsScreenModeService>();
+            services.AddSingleton<IWallpaperService, WindowsWallpaperService>();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
             services.AddSingleton<IDisplayService, MacDisplayService>();
             services.AddSingleton<IEdidReader, MacEdidReader>();
             services.AddSingleton<IScreenModeService, MacScreenModeService>();
+            services.AddSingleton<IWallpaperService, MacWallpaperService>();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
             services.AddSingleton<IDisplayService, LinuxDisplayService>();
             services.AddSingleton<IEdidReader, LinuxEdidReader>();
             services.AddSingleton<IScreenModeService, LinuxScreenModeService>();
+            services.AddSingleton<IWallpaperService, LinuxWallpaperService>();
         }
         else
         {
             throw new PlatformNotSupportedException("Unsupported operating system.");
         }
+
+        // Shared Setup State
+        services.AddSingleton<IDisplaySetupState, DisplaySetupState>();
 
         // ViewModels
         services.AddSingleton<HomeViewModel>();

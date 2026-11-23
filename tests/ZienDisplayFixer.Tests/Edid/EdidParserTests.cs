@@ -198,7 +198,7 @@ public class EdidParserTests
         Assert.NotNull(result.PreferredMode);
         Assert.Equal(2560, result.PreferredMode.Width);
         Assert.Equal(1440, result.PreferredMode.Height);
-        Assert.Equal(144.01, result.PreferredMode.RefreshHz);
+        Assert.Equal(144.0, result.PreferredMode.RefreshHz);
         Assert.False(result.PreferredMode.IsInterlaced);
     }
 

@@ -27,6 +27,7 @@
                 <ctrl:SceneControl Displays="{Binding Displays}"
                                    DeviceType="{Binding DeviceType}"
                                    LaptopScreenSize="{Binding LaptopScreenSize}"
+                                   WallpaperBrush="{Binding WallpaperBrush}"
                                    HorizontalAlignment="Stretch"
                                    VerticalAlignment="Stretch" />
             </Border>

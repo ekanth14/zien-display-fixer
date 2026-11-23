@@ -6,9 +6,11 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ZienDisplayFixer.App.Services;
 using ZienDisplayFixer.Core.Edid;
 using ZienDisplayFixer.Core.Engine;
 using ZienDisplayFixer.Core.Interfaces;
@@ -19,6 +21,7 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
     private readonly IDisplayService? _displayService;
     private readonly IEdidReader? _edidReader;
     private readonly IScreenModeService? _screenModeService;
+    private readonly IDisplaySetupState? _setupState;
     private bool _isDisposed;
 
     public string Title => "Home";
@@ -30,6 +33,9 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
 
     [ObservableProperty]
     private double _laptopScreenSize = 14.0;
+
+    [ObservableProperty]
+    private IBrush? _wallpaperBrush;
 
     [ObservableProperty]
     private string _statusText = "Checking display configuration...";
@@ -56,18 +62,28 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
     public bool CanFixScreens => !IsFixing && !IsConfirmationVisible;
 
     public HomeViewModel()
-        : this(null, null, null)
+        : this(null, null, null, null)
     {
     }
 
     public HomeViewModel(
         IDisplayService? displayService,
         IEdidReader? edidReader,
-        IScreenModeService? screenModeService)
+        IScreenModeService? screenModeService,
+        IDisplaySetupState? setupState = null)
     {
         _displayService = displayService;
         _edidReader = edidReader;
         _screenModeService = screenModeService;
+        _setupState = setupState;
+
+        if (_setupState != null)
+        {
+            _deviceType = _setupState.DeviceType;
+            _laptopScreenSize = _setupState.LaptopScreenSize;
+            _wallpaperBrush = _setupState.WallpaperBrush;
+            _setupState.SetupChanged += OnSetupStateChanged;
+        }
 
         if (_displayService != null)
         {
@@ -77,6 +93,50 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
         _ = LoadDisplaysAsync();
     }
 
+    private void OnSetupStateChanged(object? sender, EventArgs e)
+    {
+        if (_setupState == null) return;
+        RunOnUIThread(() =>
+        {
+            DeviceType = _setupState.DeviceType;
+            LaptopScreenSize = _setupState.LaptopScreenSize;
+            WallpaperBrush = _setupState.WallpaperBrush;
+
+            if (_setupState.IsDemoModeEnabled)
+            {
+                Displays.Clear();
+                foreach (var d in _setupState.Displays)
+                {
+                    Displays.Add(d);
+                }
+            }
+        });
+    }
+
+    partial void OnDeviceTypeChanged(DeviceType value)
+    {
+        if (_setupState != null && _setupState.DeviceType != value)
+        {
+            _setupState.DeviceType = value;
+        }
+    }
+
+    partial void OnLaptopScreenSizeChanged(double value)
+    {
+        if (_setupState != null && Math.Abs(_setupState.LaptopScreenSize - value) > 0.001)
+        {
+            _setupState.LaptopScreenSize = value;
+        }
+    }
+
+    partial void OnWallpaperBrushChanged(IBrush? value)
+    {
+        if (_setupState != null && _setupState.WallpaperBrush != value)
+        {
+            _setupState.WallpaperBrush = value;
+        }
+    }
+
     private void OnDisplaysChanged(object? sender, EventArgs e)
     {
         RunOnUIThread(() => _ = LoadDisplaysAsync());
@@ -84,6 +144,21 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
 
     public async Task LoadDisplaysAsync(CancellationToken ct = default)
     {
+        if (_setupState != null && _setupState.IsDemoModeEnabled && _setupState.Displays.Count > 0)
+        {
+            var demoList = _setupState.Displays.ToList();
+            RunOnUIThread(() =>
+            {
+                Displays.Clear();
+                foreach (var d in demoList)
+                {
+                    Displays.Add(d);
+                }
+            });
+            await EvaluateOptimalStateAsync(demoList, ct).ConfigureAwait(false);
+            return;
+        }
+
         if (_displayService == null)
         {
             RunOnUIThread(() => StatusText = "No display service available");
@@ -138,6 +213,15 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
                 foreach (var d in enriched)
                 {
                     Displays.Add(d);
+                }
+
+                if (_setupState != null && !_setupState.IsDemoModeEnabled)
+                {
+                    _setupState.Displays.Clear();
+                    foreach (var d in enriched)
+                    {
+                        _setupState.Displays.Add(d);
+                    }
                 }
             });
 
@@ -378,9 +462,9 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            if (Dispatcher.UIThread != null && !Dispatcher.UIThread.CheckAccess())
+            if (Avalonia.Application.Current != null && Dispatcher.UIThread is { } dispatcher && !dispatcher.CheckAccess())
             {
-                Dispatcher.UIThread.Post(action);
+                dispatcher.Post(action);
                 return;
             }
         }
@@ -397,6 +481,10 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
         if (!_isDisposed)
         {
             _isDisposed = true;
+            if (_setupState != null)
+            {
+                _setupState.SetupChanged -= OnSetupStateChanged;
+            }
             if (_displayService != null)
             {
                 _displayService.DisplaysChanged -= OnDisplaysChanged;

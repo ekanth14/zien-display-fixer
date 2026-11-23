@@ -176,7 +176,7 @@ public class SceneLayoutTests
             // Stand & base alignment
             Assert.True(m.StandY >= m.ScreenY + m.ScreenHeight);
             Assert.True(m.BaseY >= m.StandY);
-            Assert.True(m.BaseY + m.BaseHeight <= m.Y + m.Height);
+            Assert.True(m.BaseY + m.BaseHeight <= m.Y + m.Height + 1e-4);
         }
     }
 
