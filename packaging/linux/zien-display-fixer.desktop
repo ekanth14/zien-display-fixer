@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Zien Display Fixer
+GenericName=Display Optimizer
+Comment=Calm, one-click multi-display resolution and refresh rate optimizer with fail-safe rollback
+Exec=zien-display-fixer %u
+Icon=zien-display-fixer
+Terminal=false
+Categories=Utility;Settings;HardwareSettings;
+StartupNotify=true
+StartupWMClass=ZienDisplayFixer.App
+Keywords=display;monitor;screen;resolution;refresh;hz;edid;fixer;xrandr;wayland;
+
