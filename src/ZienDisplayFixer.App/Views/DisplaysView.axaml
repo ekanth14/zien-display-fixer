@@ -45,18 +45,6 @@
         <Style Selector="Button.Swatch.Active">
             <Setter Property="BorderBrush" Value="{DynamicResource AppAccent}" />
         </Style>
-        <Style Selector="Button.RemoveBtn">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{DynamicResource AppMuted}" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="8,4" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Cursor" Value="Hand" />
-        </Style>
-        <Style Selector="Button.RemoveBtn:pointerover">
-            <Setter Property="Foreground" Value="#E06C75" />
-            <Setter Property="Background" Value="#20E06C75" />
-        </Style>
         <Style Selector="Button.Pill.Active">
             <Setter Property="BorderBrush" Value="{DynamicResource AppAccent}" />
             <Setter Property="Foreground" Value="{DynamicResource AppAccent}" />
@@ -100,53 +88,65 @@
                         <StackPanel Grid.Column="2"
                                     Spacing="8"
                                     IsVisible="{Binding IsLaptop}">
-                            <TextBlock Text="Laptop screen size" Classes="Muted" FontSize="13" />
-                            <ComboBox ItemsSource="{Binding LaptopScreenSizes}"
-                                      SelectedItem="{Binding SelectedLaptopScreenSize}"
-                                      Width="130">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding StringFormat='{}{0}&quot;'}" />
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
+                            <TextBlock Text="Screen size" Classes="Muted" FontSize="13" />
+                            <Border Classes="SegmentedGroup" HorizontalAlignment="Left">
+                                <ItemsControl ItemsSource="{Binding LaptopScreenSizes}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" Spacing="2" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Classes="SegmentedItem"
+                                                    Classes.Active="{Binding $parent[UserControl].((vm:DisplaysViewModel)DataContext).SelectedLaptopScreenSize, Converter={StaticResource EqualConverter}, ConverterParameter={Binding}}"
+                                                    Content="{Binding, StringFormat='{}{0}&quot;'}"
+                                                    Command="{Binding $parent[UserControl].((vm:DisplaysViewModel)DataContext).SetLaptopScreenSizeCommand}"
+                                                    CommandParameter="{Binding}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
                         </StackPanel>
                     </Grid>
 
-                    <!-- Divider -->
-                    <Rectangle Height="1" Fill="{DynamicResource AppBorder}" />
-
-                    <!-- Wallpaper Field -->
+                    <!-- Wallpaper Section -->
                     <StackPanel Spacing="10">
-                        <TextBlock Text="Wallpaper" Classes="Muted" FontSize="13" />
+                        <TextBlock Text="Desk wallpaper" Classes="Muted" FontSize="13" />
                         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                            <!-- 4 Gradient Presets -->
+                            <!-- Dusk -->
                             <Button Classes="Swatch"
                                     Classes.Active="{Binding SelectedWallpaperPreset, Converter={StaticResource EqualConverter}, ConverterParameter=Dusk}"
                                     Background="{StaticResource DuskSwatch}"
-                                    Command="{Binding SelectWallpaperPresetCommand}"
+                                    Command="{Binding SetWallpaperPresetCommand}"
                                     CommandParameter="Dusk"
-                                    ToolTip.Tip="Dusk" />
+                                    ToolTip.Tip="Dusk gradient" />
+
+                            <!-- Dune -->
                             <Button Classes="Swatch"
                                     Classes.Active="{Binding SelectedWallpaperPreset, Converter={StaticResource EqualConverter}, ConverterParameter=Dune}"
                                     Background="{StaticResource DuneSwatch}"
-                                    Command="{Binding SelectWallpaperPresetCommand}"
+                                    Command="{Binding SetWallpaperPresetCommand}"
                                     CommandParameter="Dune"
-                                    ToolTip.Tip="Dune" />
+                                    ToolTip.Tip="Dune gradient" />
+
+                            <!-- Mist -->
                             <Button Classes="Swatch"
                                     Classes.Active="{Binding SelectedWallpaperPreset, Converter={StaticResource EqualConverter}, ConverterParameter=Mist}"
                                     Background="{StaticResource MistSwatch}"
-                                    Command="{Binding SelectWallpaperPresetCommand}"
+                                    Command="{Binding SetWallpaperPresetCommand}"
                                     CommandParameter="Mist"
-                                    ToolTip.Tip="Mist" />
+                                    ToolTip.Tip="Mist gradient" />
+
+                            <!-- Graphite -->
                             <Button Classes="Swatch"
                                     Classes.Active="{Binding SelectedWallpaperPreset, Converter={StaticResource EqualConverter}, ConverterParameter=Graphite}"
                                     Background="{StaticResource GraphiteSwatch}"
-                                    Command="{Binding SelectWallpaperPresetCommand}"
+                                    Command="{Binding SetWallpaperPresetCommand}"
                                     CommandParameter="Graphite"
-                                    ToolTip.Tip="Graphite" />
+                                    ToolTip.Tip="Graphite gradient" />
 
-                            <!-- OS Wallpaper Button -->
+                            <!-- OS System Wallpaper Button -->
                             <Button Classes="Pill"
                                     Classes.Active="{Binding SelectedWallpaperPreset, Converter={StaticResource EqualConverter}, ConverterParameter=System}"
                                     Content="System"
@@ -172,28 +172,41 @@
                     <!-- Divider -->
                     <Rectangle Height="1" Fill="{DynamicResource AppBorder}" />
 
-                    <!-- Displays Header & Add Button -->
-                    <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
-                        <StackPanel Grid.Column="0" Spacing="2">
-                            <TextBlock Text="Displays"
-                                       FontSize="18"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource AppText}" />
-                            <TextBlock Text="Manage connected monitors, dimensions, and ports"
-                                       Classes="Muted"
-                                       FontSize="12" />
-                        </StackPanel>
+                    <!-- Displays Header -->
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Connected displays"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AppText}" />
+                        <TextBlock Text="Hardware monitors detected from your graphics adapter and EDID"
+                                   Classes="Muted"
+                                   FontSize="12" />
+                    </StackPanel>
 
-                        <Button Grid.Column="1"
-                                Classes="Pill"
-                                Content="+ Add"
-                                Command="{Binding AddDisplayCommand}"
-                                IsEnabled="{Binding CanAddDisplay}"
-                                ToolTip.Tip="Add display (up to 8)" />
-                    </Grid>
+                    <!-- Empty state if no displays detected -->
+                    <Border IsVisible="{Binding !HasDisplays}"
+                            Background="#16161B"
+                            BorderBrush="{DynamicResource AppBorder}"
+                            BorderThickness="1"
+                            CornerRadius="16"
+                            Padding="24">
+                        <StackPanel Spacing="8" HorizontalAlignment="Center">
+                            <TextBlock Text="No external displays detected"
+                                       FontWeight="SemiBold"
+                                       FontSize="15"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource AppText}" />
+                            <TextBlock Text="Connect an external monitor via HDMI, DisplayPort, or USB-C to extend your workspace."
+                                       Classes="Muted"
+                                       FontSize="13"
+                                       HorizontalAlignment="Center"
+                                       TextAlignment="Center" />
+                        </StackPanel>
+                    </Border>
 
                     <!-- Connected Displays List -->
-                    <ItemsControl ItemsSource="{Binding DisplayItems}">
+                    <ItemsControl ItemsSource="{Binding DisplayItems}"
+                                  IsVisible="{Binding HasDisplays}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:DisplayItemViewModel">
                                 <Border Background="#16161B"
@@ -203,12 +216,12 @@
                                         Padding="20"
                                         Margin="0,0,0,14">
                                     <StackPanel Spacing="14">
-                                        <!-- Card Header: Title + Remove Button -->
+                                        <!-- Card Header: Title & Badges -->
                                         <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                                             <Border Grid.Column="0"
                                                     Background="{DynamicResource AppBorder}"
                                                     CornerRadius="6"
-                                                    Padding="6,2"
+                                                    Padding="8,3"
                                                     Margin="0,0,10,0"
                                                     VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding DisplayNumberText}"
@@ -217,76 +230,60 @@
                                                            Foreground="{DynamicResource AppAccent}" />
                                             </Border>
 
-                                            <TextBox Grid.Column="1"
-                                                     Text="{Binding Name}"
-                                                     FontWeight="SemiBold"
-                                                     FontSize="15"
-                                                     Foreground="{DynamicResource AppText}"
-                                                     Background="Transparent"
-                                                     BorderThickness="0"
-                                                     Padding="0"
-                                                     VerticalAlignment="Center" />
-
-                                            <Button Grid.Column="2"
-                                                    Classes="RemoveBtn"
-                                                    Content="&#x2715;"
-                                                    Command="{Binding RemoveCommand}"
-                                                    ToolTip.Tip="Remove display" />
-                                        </Grid>
-
-                                        <!-- Diagonal Size Slider -->
-                                        <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
-                                            <TextBlock Grid.Column="0"
-                                                       Text="Size"
-                                                       Classes="Muted"
-                                                       FontSize="13"
-                                                       VerticalAlignment="Center"
-                                                       Width="50" />
-                                            <Slider Grid.Column="1"
-                                                    Minimum="13"
-                                                    Maximum="65"
-                                                    Value="{Binding DiagonalInches}"
-                                                    IsSnapToTickEnabled="True"
-                                                    TickFrequency="1"
-                                                    VerticalAlignment="Center"
-                                                    Margin="10,0" />
-                                            <TextBlock Grid.Column="2"
-                                                       Text="{Binding DiagonalInches, StringFormat='{}{0:F0}&quot;'}"
-                                                       FontWeight="SemiBold"
-                                                       FontSize="14"
-                                                       Foreground="{DynamicResource AppText}"
-                                                       VerticalAlignment="Center"
-                                                       Width="40"
-                                                       TextAlignment="Right" />
-                                        </Grid>
-
-                                        <!-- Aspect Ratio and Connection Dropdowns -->
-                                        <Grid ColumnDefinitions="*,16,*" Margin="0,4,0,0">
-                                            <!-- Aspect Ratio -->
-                                            <StackPanel Grid.Column="0" Spacing="6">
-                                                <TextBlock Text="Aspect ratio" Classes="Muted" FontSize="12" />
-                                                <ComboBox ItemsSource="{Binding AspectRatioOptions}"
-                                                          SelectedItem="{Binding AspectRatio}"
-                                                          HorizontalAlignment="Stretch" />
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                                <TextBlock Text="{Binding Name}"
+                                                           FontWeight="SemiBold"
+                                                           FontSize="15"
+                                                           Foreground="{DynamicResource AppText}" />
+                                                <TextBlock Text="Primary Display"
+                                                           IsVisible="{Binding IsPrimary}"
+                                                           Foreground="{DynamicResource AppOk}"
+                                                           FontSize="11"
+                                                           FontWeight="Medium" />
                                             </StackPanel>
 
-                                            <!-- Connection -->
-                                            <StackPanel Grid.Column="2" Spacing="6">
-                                                <TextBlock Text="Connection" Classes="Muted" FontSize="12" />
-                                                <ComboBox ItemsSource="{Binding ConnectionOptions}"
-                                                          SelectedItem="{Binding Connection}"
-                                                          HorizontalAlignment="Stretch" />
-                                            </StackPanel>
+                                            <Border Grid.Column="2"
+                                                    Background="#20CDB78F"
+                                                    BorderBrush="{DynamicResource AppAccent}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="6"
+                                                    Padding="10,3">
+                                                <TextBlock Text="{Binding ConnectionText}"
+                                                           Foreground="{DynamicResource AppAccent}"
+                                                           FontSize="12"
+                                                           FontWeight="Medium" />
+                                            </Border>
                                         </Grid>
 
-                                        <!-- Native Mode Info -->
-                                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2,0,0">
-                                            <TextBlock Text="Native mode:" Classes="Muted" FontSize="12" />
-                                            <TextBlock Text="{Binding NativeModeText}"
-                                                       Foreground="{DynamicResource AppMuted}"
-                                                       FontWeight="Medium"
-                                                       FontSize="12" />
-                                        </StackPanel>
+                                        <!-- Specifications Grid -->
+                                        <Grid ColumnDefinitions="*,*,*" Margin="0,4,0,0">
+                                            <!-- Size & Aspect Ratio -->
+                                            <StackPanel Grid.Column="0" Spacing="4">
+                                                <TextBlock Text="Physical Size" Classes="Muted" FontSize="11" />
+                                                <TextBlock Text="{Binding PhysicalSizeText}"
+                                                           Foreground="{DynamicResource AppText}"
+                                                           FontWeight="SemiBold"
+                                                           FontSize="13" />
+                                            </StackPanel>
+
+                                            <!-- Active Mode -->
+                                            <StackPanel Grid.Column="1" Spacing="4">
+                                                <TextBlock Text="Current Mode" Classes="Muted" FontSize="11" />
+                                                <TextBlock Text="{Binding CurrentModeText}"
+                                                           Foreground="{DynamicResource AppText}"
+                                                           FontWeight="SemiBold"
+                                                           FontSize="13" />
+                                            </StackPanel>
+
+                                            <!-- Native / Recommended Mode -->
+                                            <StackPanel Grid.Column="2" Spacing="4">
+                                                <TextBlock Text="Native Mode (EDID)" Classes="Muted" FontSize="11" />
+                                                <TextBlock Text="{Binding NativeModeText}"
+                                                           Foreground="{DynamicResource AppOk}"
+                                                           FontWeight="SemiBold"
+                                                           FontSize="13" />
+                                            </StackPanel>
+                                        </Grid>
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>

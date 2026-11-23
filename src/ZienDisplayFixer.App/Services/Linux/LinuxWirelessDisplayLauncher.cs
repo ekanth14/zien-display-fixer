@@ -54,13 +54,7 @@ public class LinuxWirelessDisplayLauncher : IWirelessDisplayLauncher
 
     public Task<IReadOnlyList<WirelessDisplayDevice>> ScanNearbyAsync(CancellationToken ct = default)
     {
-        IReadOnlyList<WirelessDisplayDevice> devices =
-        [
-            new WirelessDisplayDevice("w-conference-room", "Conference Room Display", false, 65.0),
-            new WirelessDisplayDevice("w-meeting-room", "Meeting Room TV", false, 50.0)
-        ];
-
-        return Task.FromResult(devices);
+        return Task.FromResult<IReadOnlyList<WirelessDisplayDevice>>([]);
     }
 
     private static bool CheckIsSupported()

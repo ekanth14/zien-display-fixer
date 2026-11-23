@@ -58,12 +58,6 @@ public class MacWirelessDisplayLauncher : IWirelessDisplayLauncher
 
     public Task<IReadOnlyList<WirelessDisplayDevice>> ScanNearbyAsync(CancellationToken ct = default)
     {
-        IReadOnlyList<WirelessDisplayDevice> devices =
-        [
-            new WirelessDisplayDevice("w-apple-tv", "Living Room Apple TV", false, 65.0),
-            new WirelessDisplayDevice("w-sidecar-ipad", "Office iPad", false, 12.9)
-        ];
-
-        return Task.FromResult(devices);
+        return Task.FromResult<IReadOnlyList<WirelessDisplayDevice>>([]);
     }
 }

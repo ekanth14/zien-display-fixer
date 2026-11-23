@@ -107,20 +107,9 @@ public partial class WirelessViewModel : ViewModelBase, IDisposable
                 await _launcher.OpenWirelessDisplayPickerAsync();
             }
 
-            IReadOnlyList<WirelessDisplayDevice> devices;
-            if (_launcher != null)
-            {
-                devices = await _launcher.ScanNearbyAsync();
-            }
-            else
-            {
-                devices =
-                [
-                    new WirelessDisplayDevice("w-living-room", "Living room TV", false, 55.0),
-                    new WirelessDisplayDevice("w-bedroom", "Bedroom TV", false, 43.0),
-                    new WirelessDisplayDevice("w-office", "Office display", false, 27.0)
-                ];
-            }
+            IReadOnlyList<WirelessDisplayDevice> devices = _launcher != null
+                ? await _launcher.ScanNearbyAsync(CancellationToken.None)
+                : [];
 
             DiscoveredDevices.Clear();
             foreach (var d in devices)
@@ -137,7 +126,7 @@ public partial class WirelessViewModel : ViewModelBase, IDisposable
 
             StatusMessage = DiscoveredDevices.Count > 0
                 ? $"Found {DiscoveredDevices.Count} display(s)."
-                : "No wireless displays found nearby.";
+                : "No wireless displays found nearby. Click 'Search again' to open the system display discovery menu.";
         }
         catch (Exception ex)
         {
@@ -171,32 +160,6 @@ public partial class WirelessViewModel : ViewModelBase, IDisposable
         if (item != null)
         {
             item.IsConnected = true;
-
-            if (_setupState != null && _setupState.IsDemoModeEnabled)
-            {
-                bool exists = _setupState.Displays.Any(d =>
-                    string.Equals(d.Id, item.Id, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(d.Name, item.Name, StringComparison.OrdinalIgnoreCase));
-
-                if (!exists && _setupState.Displays.Count < 8)
-                {
-                    var (wMm, hMm) = DisplayItemViewModel.CalculateDimensions(item.DiagonalInches, "16:9");
-                    var display = new DisplayInfo(
-                        id: item.Id,
-                        name: item.Name,
-                        model: item.Name,
-                        isPrimary: false,
-                        positionX: 0,
-                        positionY: 0,
-                        currentMode: new DisplayMode(3840, 2160, 60.0, false),
-                        physicalWidthMm: wMm,
-                        physicalHeightMm: hMm,
-                        connection: ConnectionType.WiFi);
-
-                    _setupState.Displays.Add(display);
-                }
-            }
-
             StatusMessage = $"Connected to {item.Name}.";
         }
     }

@@ -28,8 +28,17 @@ public class SettingsServiceTests : IDisposable
         }
         catch
         {
-            // Best effort cleanup
+            // Ignore cleanup failures in temp dir
         }
+    }
+
+    [Fact]
+    public void DefaultPath_PointsToApplicationDataFolder()
+    {
+        var defaultPath = SettingsService.GetDefaultSettingsFilePath();
+        Assert.NotNull(defaultPath);
+        Assert.Contains("ZienDisplayFixer", defaultPath);
+        Assert.EndsWith("settings.json", defaultPath);
     }
 
     [Fact]
@@ -42,7 +51,6 @@ public class SettingsServiceTests : IDisposable
         Assert.True(service.CurrentSettings.FixAutomaticallyOnConnect);
         Assert.False(service.CurrentSettings.StartAtLogin);
         Assert.True(service.CurrentSettings.IsAnimationEnabled);
-        Assert.True(service.CurrentSettings.IsDemoModeEnabled);
     }
 
     [Fact]
@@ -57,7 +65,6 @@ public class SettingsServiceTests : IDisposable
         Assert.True(loaded.FixAutomaticallyOnConnect);
         Assert.False(loaded.StartAtLogin);
         Assert.True(loaded.IsAnimationEnabled);
-        Assert.True(loaded.IsDemoModeEnabled);
         Assert.Same(loaded, service.CurrentSettings);
     }
 
@@ -74,8 +81,7 @@ public class SettingsServiceTests : IDisposable
         {
             FixAutomaticallyOnConnect = false,
             StartAtLogin = true,
-            IsAnimationEnabled = false,
-            IsDemoModeEnabled = false
+            IsAnimationEnabled = false
         };
 
         await service.SaveSettingsAsync(modified, TestContext.Current.CancellationToken);
@@ -84,7 +90,6 @@ public class SettingsServiceTests : IDisposable
         Assert.False(eventPayload.FixAutomaticallyOnConnect);
         Assert.True(eventPayload.StartAtLogin);
         Assert.False(eventPayload.IsAnimationEnabled);
-        Assert.False(eventPayload.IsDemoModeEnabled);
 
         // Load with a new service instance pointing to the same file
         var secondService = new SettingsService(filePath);
@@ -93,7 +98,6 @@ public class SettingsServiceTests : IDisposable
         Assert.False(loaded.FixAutomaticallyOnConnect);
         Assert.True(loaded.StartAtLogin);
         Assert.False(loaded.IsAnimationEnabled);
-        Assert.False(loaded.IsDemoModeEnabled);
     }
 
     [Fact]
@@ -109,7 +113,6 @@ public class SettingsServiceTests : IDisposable
         Assert.True(loaded.FixAutomaticallyOnConnect);
         Assert.False(loaded.StartAtLogin);
         Assert.True(loaded.IsAnimationEnabled);
-        Assert.True(loaded.IsDemoModeEnabled);
     }
 
     [Fact]
@@ -122,8 +125,7 @@ public class SettingsServiceTests : IDisposable
         {
             FixAutomaticallyOnConnect = true,
             StartAtLogin = true,
-            IsAnimationEnabled = false,
-            IsDemoModeEnabled = true
+            IsAnimationEnabled = false
         };
 
         await service.SaveSettingsAsync(settings, TestContext.Current.CancellationToken);

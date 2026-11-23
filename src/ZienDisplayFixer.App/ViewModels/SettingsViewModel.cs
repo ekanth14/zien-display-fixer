@@ -27,9 +27,6 @@ public partial class SettingsViewModel : ViewModelBase
     private bool _isAnimationEnabled = true;
 
     [ObservableProperty]
-    private bool _isDemoModeEnabled = true;
-
-    [ObservableProperty]
     private string? _statusMessage = "Settings are saved automatically.";
 
     public SettingsViewModel()
@@ -55,12 +52,10 @@ public partial class SettingsViewModel : ViewModelBase
                 _fixAutomaticallyOnConnect = current.FixAutomaticallyOnConnect;
                 _startAtLogin = current.StartAtLogin;
                 _isAnimationEnabled = current.IsAnimationEnabled;
-                _isDemoModeEnabled = current.IsDemoModeEnabled;
             }
             else if (_setupState != null)
             {
                 _isAnimationEnabled = _setupState.IsAnimationEnabled;
-                _isDemoModeEnabled = _setupState.IsDemoModeEnabled;
             }
 
             if (_autostartService != null)
@@ -71,7 +66,6 @@ public partial class SettingsViewModel : ViewModelBase
             if (_setupState != null)
             {
                 _setupState.IsAnimationEnabled = _isAnimationEnabled;
-                _setupState.IsDemoModeEnabled = _isDemoModeEnabled;
             }
         }
         finally
@@ -125,12 +119,10 @@ public partial class SettingsViewModel : ViewModelBase
                 FixAutomaticallyOnConnect = newSettings.FixAutomaticallyOnConnect;
                 StartAtLogin = newSettings.StartAtLogin;
                 IsAnimationEnabled = newSettings.IsAnimationEnabled;
-                IsDemoModeEnabled = newSettings.IsDemoModeEnabled;
 
                 if (_setupState != null)
                 {
                     _setupState.IsAnimationEnabled = newSettings.IsAnimationEnabled;
-                    _setupState.IsDemoModeEnabled = newSettings.IsDemoModeEnabled;
                 }
             }
             finally
@@ -146,14 +138,12 @@ public partial class SettingsViewModel : ViewModelBase
         {
             if (_isInitializing || _setupState == null) return;
 
-            if (IsAnimationEnabled != _setupState.IsAnimationEnabled ||
-                IsDemoModeEnabled != _setupState.IsDemoModeEnabled)
+            if (IsAnimationEnabled != _setupState.IsAnimationEnabled)
             {
                 _isInitializing = true;
                 try
                 {
                     IsAnimationEnabled = _setupState.IsAnimationEnabled;
-                    IsDemoModeEnabled = _setupState.IsDemoModeEnabled;
                 }
                 finally
                 {
@@ -178,12 +168,10 @@ public partial class SettingsViewModel : ViewModelBase
                 FixAutomaticallyOnConnect = loaded.FixAutomaticallyOnConnect;
                 StartAtLogin = loaded.StartAtLogin;
                 IsAnimationEnabled = loaded.IsAnimationEnabled;
-                IsDemoModeEnabled = loaded.IsDemoModeEnabled;
 
                 if (_setupState != null)
                 {
                     _setupState.IsAnimationEnabled = loaded.IsAnimationEnabled;
-                    _setupState.IsDemoModeEnabled = loaded.IsDemoModeEnabled;
                 }
             }
             finally
@@ -199,8 +187,7 @@ public partial class SettingsViewModel : ViewModelBase
         {
             FixAutomaticallyOnConnect = FixAutomaticallyOnConnect,
             StartAtLogin = StartAtLogin,
-            IsAnimationEnabled = IsAnimationEnabled,
-            IsDemoModeEnabled = IsDemoModeEnabled
+            IsAnimationEnabled = IsAnimationEnabled
         };
 
         if (_settingsService != null)
@@ -234,15 +221,6 @@ public partial class SettingsViewModel : ViewModelBase
         if (_setupState != null && _setupState.IsAnimationEnabled != value)
         {
             _setupState.IsAnimationEnabled = value;
-        }
-        OnSettingChanged();
-    }
-
-    partial void OnIsDemoModeEnabledChanged(bool value)
-    {
-        if (_setupState != null && _setupState.IsDemoModeEnabled != value)
-        {
-            _setupState.IsDemoModeEnabled = value;
         }
         OnSettingChanged();
     }

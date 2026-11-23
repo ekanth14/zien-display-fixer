@@ -106,15 +106,6 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
             LaptopScreenSize = _setupState.LaptopScreenSize;
             WallpaperBrush = _setupState.WallpaperBrush;
             IsAnimationEnabled = _setupState.IsAnimationEnabled;
-
-            if (_setupState.IsDemoModeEnabled)
-            {
-                Displays.Clear();
-                foreach (var d in _setupState.Displays)
-                {
-                    Displays.Add(d);
-                }
-            }
         });
     }
 
@@ -157,21 +148,6 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
 
     public async Task LoadDisplaysAsync(CancellationToken ct = default)
     {
-        if (_setupState != null && _setupState.IsDemoModeEnabled && _setupState.Displays.Count > 0)
-        {
-            var demoList = _setupState.Displays.ToList();
-            RunOnUIThread(() =>
-            {
-                Displays.Clear();
-                foreach (var d in demoList)
-                {
-                    Displays.Add(d);
-                }
-            });
-            await EvaluateOptimalStateAsync(demoList, ct).ConfigureAwait(false);
-            return;
-        }
-
         if (_displayService == null)
         {
             RunOnUIThread(() => StatusText = "No display service available");
@@ -228,7 +204,7 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
                     Displays.Add(d);
                 }
 
-                if (_setupState != null && !_setupState.IsDemoModeEnabled)
+                if (_setupState != null)
                 {
                     _setupState.Displays.Clear();
                     foreach (var d in enriched)

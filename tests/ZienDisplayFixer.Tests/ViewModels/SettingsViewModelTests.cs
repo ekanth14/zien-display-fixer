@@ -46,8 +46,7 @@ public class SettingsViewModelTests
         {
             FixAutomaticallyOnConnect = false,
             StartAtLogin = true,
-            IsAnimationEnabled = false,
-            IsDemoModeEnabled = false
+            IsAnimationEnabled = false
         };
 
         var service = new FakeSettingsService { CurrentSettings = settings };
@@ -58,11 +57,9 @@ public class SettingsViewModelTests
         Assert.False(vm.FixAutomaticallyOnConnect);
         Assert.True(vm.StartAtLogin);
         Assert.False(vm.IsAnimationEnabled);
-        Assert.False(vm.IsDemoModeEnabled);
 
         // State is synchronized with initial settings
         Assert.False(state.IsAnimationEnabled);
-        Assert.False(state.IsDemoModeEnabled);
     }
 
     [Fact]
@@ -74,8 +71,7 @@ public class SettingsViewModelTests
             {
                 FixAutomaticallyOnConnect = false,
                 StartAtLogin = true,
-                IsAnimationEnabled = false,
-                IsDemoModeEnabled = false
+                IsAnimationEnabled = false
             }
         };
         var state = new DisplaySetupState();
@@ -86,8 +82,7 @@ public class SettingsViewModelTests
         {
             FixAutomaticallyOnConnect = true,
             StartAtLogin = false,
-            IsAnimationEnabled = true,
-            IsDemoModeEnabled = true
+            IsAnimationEnabled = true
         };
 
         await vm.LoadSettingsAsync(TestContext.Current.CancellationToken);
@@ -95,10 +90,7 @@ public class SettingsViewModelTests
         Assert.True(vm.FixAutomaticallyOnConnect);
         Assert.False(vm.StartAtLogin);
         Assert.True(vm.IsAnimationEnabled);
-        Assert.True(vm.IsDemoModeEnabled);
-
         Assert.True(state.IsAnimationEnabled);
-        Assert.True(state.IsDemoModeEnabled);
     }
 
     [Fact]
@@ -125,12 +117,6 @@ public class SettingsViewModelTests
         Assert.True(service.SaveCallCount > countBeforeAnimation);
         Assert.False(service.LastSavedSettings?.IsAnimationEnabled);
         Assert.False(state.IsAnimationEnabled);
-
-        var countBeforeDemo = service.SaveCallCount;
-        vm.IsDemoModeEnabled = false;
-        Assert.True(service.SaveCallCount > countBeforeDemo);
-        Assert.False(service.LastSavedSettings?.IsDemoModeEnabled);
-        Assert.False(state.IsDemoModeEnabled);
     }
 
     [Fact]
@@ -143,10 +129,6 @@ public class SettingsViewModelTests
         state.IsAnimationEnabled = false;
         Assert.False(vm.IsAnimationEnabled);
         Assert.False(service.LastSavedSettings?.IsAnimationEnabled);
-
-        state.IsDemoModeEnabled = false;
-        Assert.False(vm.IsDemoModeEnabled);
-        Assert.False(service.LastSavedSettings?.IsDemoModeEnabled);
     }
 
     [Fact]
@@ -160,16 +142,12 @@ public class SettingsViewModelTests
         {
             FixAutomaticallyOnConnect = false,
             StartAtLogin = true,
-            IsAnimationEnabled = false,
-            IsDemoModeEnabled = false
+            IsAnimationEnabled = false
         });
 
         Assert.False(vm.FixAutomaticallyOnConnect);
         Assert.True(vm.StartAtLogin);
         Assert.False(vm.IsAnimationEnabled);
-        Assert.False(vm.IsDemoModeEnabled);
-
         Assert.False(state.IsAnimationEnabled);
-        Assert.False(state.IsDemoModeEnabled);
     }
 }

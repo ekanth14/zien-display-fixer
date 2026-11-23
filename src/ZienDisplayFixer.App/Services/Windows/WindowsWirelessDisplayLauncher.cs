@@ -56,13 +56,6 @@ public class WindowsWirelessDisplayLauncher : IWirelessDisplayLauncher
 
     public Task<IReadOnlyList<WirelessDisplayDevice>> ScanNearbyAsync(CancellationToken ct = default)
     {
-        IReadOnlyList<WirelessDisplayDevice> devices =
-        [
-            new WirelessDisplayDevice("w-living-room", "Living room TV", false, 55.0),
-            new WirelessDisplayDevice("w-bedroom", "Bedroom TV", false, 43.0),
-            new WirelessDisplayDevice("w-office", "Office display", false, 27.0)
-        ];
-
-        return Task.FromResult(devices);
+        return Task.FromResult<IReadOnlyList<WirelessDisplayDevice>>([]);
     }
 }

@@ -16,6 +16,7 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ZienDisplayFixer.App.Services;
+using ZienDisplayFixer.Core.Edid;
 using ZienDisplayFixer.Core.Interfaces;
 using ZienDisplayFixer.Core.Models;
 
@@ -24,14 +25,15 @@ public partial class DisplaysViewModel : ViewModelBase
     private readonly IDisplaySetupState? _setupState;
     private readonly IWallpaperService? _wallpaperService;
     private readonly IDisplayService? _displayService;
+    private readonly IEdidReader? _edidReader;
     private bool _isSyncing;
 
     public string Title => "Displays";
 
-    public static readonly LinearGradientBrush DuskBrush = CreateGradient("#6A5A8E", "#1B1630");
-    public static readonly LinearGradientBrush DuneBrush = CreateGradient("#B9966B", "#2E2218");
-    public static readonly LinearGradientBrush MistBrush = CreateGradient("#8FA3AD", "#1F2830");
-    public static readonly LinearGradientBrush GraphiteBrush = CreateGradient("#3A3F4C", "#0D0F13");
+    public static readonly IBrush DuskBrush = CreateGradient("#6A5A8E", "#1B1630");
+    public static readonly IBrush DuneBrush = CreateGradient("#B9966B", "#2E2218");
+    public static readonly IBrush MistBrush = CreateGradient("#8FA3AD", "#1F2830");
+    public static readonly IBrush GraphiteBrush = CreateGradient("#3A3F4C", "#0D0F13");
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsLaptop))]
@@ -50,54 +52,29 @@ public partial class DisplaysViewModel : ViewModelBase
     [ObservableProperty]
     private string _selectedWallpaperPreset = "Graphite";
 
-    public string WallpaperHintText => "The app will use your current Windows/system wallpaper.";
-
-    [ObservableProperty]
-    private bool _isDemoModeEnabled = true;
+    public string WallpaperHintText => "The app uses your current Windows/system wallpaper.";
 
     private IDisposable? _currentImageBitmap;
 
     public ObservableCollection<DisplayItemViewModel> DisplayItems { get; } = [];
 
-    public bool CanAddDisplay => IsDemoModeEnabled && DisplayItems.Count < 8;
-
-    public static readonly IReadOnlyList<string> DefaultAspectRatioOptions =
-    [
-        "16:9",
-        "16:10",
-        "21:9",
-        "32:9",
-        "4:3",
-        "5:4"
-    ];
-
-    public static readonly IReadOnlyList<ConnectionType> DefaultConnectionOptions =
-    [
-        ConnectionType.Hdmi,
-        ConnectionType.DisplayPort,
-        ConnectionType.UsbC,
-        ConnectionType.Usb4,
-        ConnectionType.Vga,
-        ConnectionType.WiFi
-    ];
-
-    public IReadOnlyList<string> AspectRatioOptions => DefaultAspectRatioOptions;
-
-    public IReadOnlyList<ConnectionType> ConnectionOptions => DefaultConnectionOptions;
+    public bool HasDisplays => DisplayItems.Count > 0;
 
     public DisplaysViewModel()
-        : this(null, null, null)
+        : this(null, null, null, null)
     {
     }
 
     public DisplaysViewModel(
         IDisplaySetupState? setupState,
         IWallpaperService? wallpaperService = null,
-        IDisplayService? displayService = null)
+        IDisplayService? displayService = null,
+        IEdidReader? edidReader = null)
     {
         _setupState = setupState;
         _wallpaperService = wallpaperService;
         _displayService = displayService;
+        _edidReader = edidReader;
 
         if (_setupState != null)
         {
@@ -105,104 +82,107 @@ public partial class DisplaysViewModel : ViewModelBase
             _selectedLaptopScreenSize = _setupState.LaptopScreenSize;
             _wallpaperBrush = _setupState.WallpaperBrush ?? GraphiteBrush;
             _selectedWallpaperPreset = _setupState.SelectedWallpaperPreset;
-            _isDemoModeEnabled = _setupState.IsDemoModeEnabled;
 
             _setupState.SetupChanged += OnSetupStateChanged;
         }
 
-        // Initialize displays
-        if (_isDemoModeEnabled)
-        {
-            InitializeDemoDisplays();
-        }
-        else
-        {
-            _ = LoadDisplaysFromServiceAsync();
-        }
+        _ = LoadDisplaysFromServiceAsync();
     }
 
-    private void InitializeDemoDisplays()
+    public async Task LoadDisplaysFromServiceAsync(CancellationToken ct = default)
     {
-        foreach (var item in DisplayItems)
-        {
-            item.Changed -= OnItemChanged;
-        }
-
         if (_setupState != null && _setupState.Displays.Count > 0)
         {
-            DisplayItems.Clear();
-            foreach (var d in _setupState.Displays)
-            {
-                var item = DisplayItemViewModel.FromDisplayInfo(d, RemoveDisplay);
-                item.Changed += OnItemChanged;
-                DisplayItems.Add(item);
-            }
+            SyncFromSetupStateDisplays();
+            return;
         }
-        else
+
+        if (_displayService == null)
         {
             DisplayItems.Clear();
-
-            var d1 = new DisplayItemViewModel
-            {
-                Name = "Dell UltraSharp 27\"",
-                DiagonalInches = 27.0,
-                AspectRatio = "16:9",
-                Connection = ConnectionType.Hdmi,
-                NativeModeText = "2560 × 1440 @ 144Hz",
-                CurrentMode = new DisplayMode(2560, 1440, 144.0, false)
-            };
-            d1.RemoveCommand = new RelayCommand(() => RemoveDisplay(d1));
-            d1.Changed += OnItemChanged;
-            DisplayItems.Add(d1);
-
-            var d2 = new DisplayItemViewModel
-            {
-                Name = "Dell 24\" Monitor",
-                DiagonalInches = 24.0,
-                AspectRatio = "16:9",
-                Connection = ConnectionType.DisplayPort,
-                NativeModeText = "1920 × 1080 @ 60Hz",
-                CurrentMode = new DisplayMode(1920, 1080, 60.0, false)
-            };
-            d2.RemoveCommand = new RelayCommand(() => RemoveDisplay(d2));
-            d2.Changed += OnItemChanged;
-            DisplayItems.Add(d2);
-
-            SyncToSetupState();
+            OnPropertyChanged(nameof(HasDisplays));
+            return;
         }
-
-        UpdateDisplayIndices();
-        AddDisplayCommand.NotifyCanExecuteChanged();
-        OnPropertyChanged(nameof(CanAddDisplay));
-    }
-
-    private async Task LoadDisplaysFromServiceAsync(CancellationToken ct = default)
-    {
-        if (_displayService == null) return;
 
         try
         {
             var raw = await _displayService.GetDisplaysAsync(ct).ConfigureAwait(false);
-            foreach (var item in DisplayItems)
-            {
-                item.Changed -= OnItemChanged;
-            }
-            DisplayItems.Clear();
+            var enriched = new List<DisplayInfo>();
+
             foreach (var d in raw)
             {
-                var item = DisplayItemViewModel.FromDisplayInfo(d, RemoveDisplay);
-                item.Changed += OnItemChanged;
-                DisplayItems.Add(item);
+                var cur = d;
+                if (_edidReader != null && cur.PhysicalWidthMm <= 0)
+                {
+                    try
+                    {
+                        var edidBytes = await _edidReader.ReadRawEdidAsync(cur.Id, ct).ConfigureAwait(false);
+                        if (edidBytes != null)
+                        {
+                            var parsed = EdidParser.Parse(edidBytes);
+                            if (parsed != null)
+                            {
+                                double wMm = parsed.PhysicalWidthCm > 0 ? parsed.PhysicalWidthCm * 10 : cur.PhysicalWidthMm;
+                                double hMm = parsed.PhysicalHeightCm > 0 ? parsed.PhysicalHeightCm * 10 : cur.PhysicalHeightMm;
+                                string model = !string.IsNullOrWhiteSpace(parsed.ModelName) ? parsed.ModelName : cur.Model;
+                                string name = !string.IsNullOrWhiteSpace(parsed.ModelName) ? parsed.ModelName : cur.Name;
+
+                                cur = cur with
+                                {
+                                    PhysicalWidthMm = wMm,
+                                    PhysicalHeightMm = hMm,
+                                    Model = model,
+                                    Name = name
+                                };
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Keep raw display
+                    }
+                }
+                enriched.Add(cur);
             }
-            UpdateDisplayIndices();
-            SyncToSetupState();
-            AddDisplayCommand.NotifyCanExecuteChanged();
-            OnPropertyChanged(nameof(CanAddDisplay));
+
+            if (_setupState != null)
+            {
+                _setupState.Displays.Clear();
+                foreach (var d in enriched)
+                {
+                    _setupState.Displays.Add(d);
+                }
+            }
+
+            SyncFromSetupStateDisplays();
         }
         catch
         {
-            // Fallback to demo displays if service fails
-            InitializeDemoDisplays();
+            DisplayItems.Clear();
+            OnPropertyChanged(nameof(HasDisplays));
+        }
+    }
+
+    private void SyncFromSetupStateDisplays()
+    {
+        if (_setupState == null) return;
+
+        _isSyncing = true;
+        try
+        {
+            DisplayItems.Clear();
+            int idx = DeviceType == DeviceType.Laptop ? 2 : 1;
+            foreach (var d in _setupState.Displays)
+            {
+                int currentIdx = d.IsPrimary && DeviceType == DeviceType.Laptop ? 1 : idx++;
+                var item = DisplayItemViewModel.FromDisplayInfo(d, displayIndex: currentIdx);
+                DisplayItems.Add(item);
+            }
+            OnPropertyChanged(nameof(HasDisplays));
+        }
+        finally
+        {
+            _isSyncing = false;
         }
     }
 
@@ -228,7 +208,7 @@ public partial class DisplaysViewModel : ViewModelBase
         {
             _setupState.DeviceType = value;
         }
-        UpdateDisplayIndices();
+        SyncFromSetupStateDisplays();
     }
 
     partial void OnSelectedLaptopScreenSizeChanged(double value)
@@ -239,103 +219,71 @@ public partial class DisplaysViewModel : ViewModelBase
         }
     }
 
-    partial void OnWallpaperBrushChanged(IBrush? value)
+    [RelayCommand]
+    public void SetLaptopScreenSize(object? param)
     {
-        if (_setupState != null && _setupState.WallpaperBrush != value)
+        if (param is double d)
         {
-            _setupState.WallpaperBrush = value;
+            SelectedLaptopScreenSize = d;
         }
-    }
-
-    partial void OnSelectedWallpaperPresetChanged(string value)
-    {
-        if (_setupState != null && _setupState.SelectedWallpaperPreset != value)
+        else if (param != null && double.TryParse(param.ToString(), out double parsed))
         {
-            _setupState.SelectedWallpaperPreset = value;
+            SelectedLaptopScreenSize = parsed;
         }
-    }
-
-    partial void OnIsDemoModeEnabledChanged(bool value)
-    {
-        if (_setupState != null && _setupState.IsDemoModeEnabled != value)
-        {
-            _setupState.IsDemoModeEnabled = value;
-        }
-
-        if (value)
-        {
-            InitializeDemoDisplays();
-        }
-        else
-        {
-            _ = LoadDisplaysFromServiceAsync();
-        }
-
-        AddDisplayCommand.NotifyCanExecuteChanged();
-        OnPropertyChanged(nameof(CanAddDisplay));
     }
 
     [RelayCommand]
-    public void SelectWallpaperPreset(string presetName)
+    public void SetWallpaperPreset(string preset)
     {
-        _currentImageBitmap?.Dispose();
-        _currentImageBitmap = null;
-
-        switch (presetName?.Trim().ToLowerInvariant())
+        SelectedWallpaperPreset = preset;
+        WallpaperBrush = preset switch
         {
-            case "dusk":
-                WallpaperBrush = DuskBrush;
-                SelectedWallpaperPreset = "Dusk";
-                break;
-            case "dune":
-                WallpaperBrush = DuneBrush;
-                SelectedWallpaperPreset = "Dune";
-                break;
-            case "mist":
-                WallpaperBrush = MistBrush;
-                SelectedWallpaperPreset = "Mist";
-                break;
-            case "graphite":
-            default:
-                WallpaperBrush = GraphiteBrush;
-                SelectedWallpaperPreset = "Graphite";
-                break;
+            "Dusk" => DuskBrush,
+            "Dune" => DuneBrush,
+            "Mist" => MistBrush,
+            "Graphite" => GraphiteBrush,
+            _ => GraphiteBrush
+        };
+
+        if (_setupState != null)
+        {
+            _setupState.WallpaperBrush = WallpaperBrush;
+            _setupState.SelectedWallpaperPreset = SelectedWallpaperPreset;
         }
     }
 
     [RelayCommand]
     public async Task UseSystemWallpaperAsync(CancellationToken ct = default)
     {
-        if (_wallpaperService == null) return;
+        if (_wallpaperService == null)
+        {
+            SetWallpaperPreset("Graphite");
+            return;
+        }
 
         try
         {
-            var stream = await _wallpaperService.GetWallpaperImageStreamAsync(ct).ConfigureAwait(false);
-            if (stream != null)
+            var path = await _wallpaperService.GetCurrentWallpaperPathAsync(ct).ConfigureAwait(false);
+            if (!string.IsNullOrEmpty(path) && File.Exists(path))
             {
-                using (stream)
+                await using var stream = File.OpenRead(path);
+                SetCustomWallpaper(stream);
+                SelectedWallpaperPreset = "System";
+
+                if (_setupState != null)
                 {
-                    try
-                    {
-                        var bitmap = new Bitmap(stream);
-                        _currentImageBitmap?.Dispose();
-                        _currentImageBitmap = bitmap;
-                        WallpaperBrush = new ImageBrush(bitmap) { Stretch = Stretch.UniformToFill };
-                    }
-                    catch
-                    {
-                        // Fallback in headless environment where render interface is not active
-                        _currentImageBitmap?.Dispose();
-                        _currentImageBitmap = null;
-                        WallpaperBrush = new SolidColorBrush(Color.Parse("#1A1A22"));
-                    }
-                    SelectedWallpaperPreset = "System";
+                    _setupState.WallpaperBrush = WallpaperBrush;
+                    _setupState.SelectedWallpaperPreset = "System";
                 }
+            }
+            else
+            {
+                SetWallpaperPreset("Graphite");
             }
         }
         catch
         {
-            // Ignore wallpaper read errors
+            SetWallpaperPreset("Graphite");
         }
     }
 
@@ -345,7 +293,7 @@ public partial class DisplaysViewModel : ViewModelBase
         try
         {
             TopLevel? topLevel = null;
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 topLevel = desktop.MainWindow;
             }
@@ -391,87 +339,21 @@ public partial class DisplaysViewModel : ViewModelBase
             }
             catch
             {
-                // Fallback in headless environment
                 _currentImageBitmap?.Dispose();
                 _currentImageBitmap = null;
                 WallpaperBrush = new SolidColorBrush(Color.Parse("#252830"));
             }
             SelectedWallpaperPreset = "Upload";
+
+            if (_setupState != null)
+            {
+                _setupState.WallpaperBrush = WallpaperBrush;
+                _setupState.SelectedWallpaperPreset = "Upload";
+            }
         }
         catch
         {
             // Ignore image parse errors
-        }
-    }
-
-    [RelayCommand(CanExecute = nameof(CanAddDisplay))]
-    public void AddDisplay()
-    {
-        if (DisplayItems.Count >= 8) return;
-
-        int num = DisplayItems.Count + 1;
-        var item = new DisplayItemViewModel
-        {
-            Name = $"Display {num}",
-            DiagonalInches = 27.0,
-            AspectRatio = "16:9",
-            Connection = ConnectionType.Hdmi,
-            NativeModeText = "2560 × 1440 @ 144Hz",
-            CurrentMode = new DisplayMode(2560, 1440, 144.0, false)
-        };
-        item.RemoveCommand = new RelayCommand(() => RemoveDisplay(item));
-        item.Changed += OnItemChanged;
-
-        DisplayItems.Add(item);
-        UpdateDisplayIndices();
-        AddDisplayCommand.NotifyCanExecuteChanged();
-        OnPropertyChanged(nameof(CanAddDisplay));
-        SyncToSetupState();
-    }
-
-    [RelayCommand]
-    public void RemoveDisplay(DisplayItemViewModel? item)
-    {
-        if (item == null) return;
-
-        item.Changed -= OnItemChanged;
-        DisplayItems.Remove(item);
-        UpdateDisplayIndices();
-        AddDisplayCommand.NotifyCanExecuteChanged();
-        OnPropertyChanged(nameof(CanAddDisplay));
-        SyncToSetupState();
-    }
-
-    private void UpdateDisplayIndices()
-    {
-        int offset = DeviceType == DeviceType.Laptop ? 1 : 0;
-        for (int i = 0; i < DisplayItems.Count; i++)
-        {
-            DisplayItems[i].DisplayIndex = i + 1 + offset;
-        }
-    }
-
-    private void OnItemChanged(object? sender, EventArgs e)
-    {
-        SyncToSetupState();
-    }
-
-    private void SyncToSetupState()
-    {
-        if (_setupState == null || _isSyncing) return;
-
-        try
-        {
-            _isSyncing = true;
-            _setupState.Displays.Clear();
-            foreach (var item in DisplayItems)
-            {
-                _setupState.Displays.Add(item.ToDisplayInfo());
-            }
-        }
-        finally
-        {
-            _isSyncing = false;
         }
     }
 
@@ -483,7 +365,7 @@ public partial class DisplaysViewModel : ViewModelBase
         SelectedLaptopScreenSize = _setupState.LaptopScreenSize;
         WallpaperBrush = _setupState.WallpaperBrush ?? GraphiteBrush;
         SelectedWallpaperPreset = _setupState.SelectedWallpaperPreset;
-        IsDemoModeEnabled = _setupState.IsDemoModeEnabled;
+        SyncFromSetupStateDisplays();
     }
 
     private static LinearGradientBrush CreateGradient(string startHex, string endHex)

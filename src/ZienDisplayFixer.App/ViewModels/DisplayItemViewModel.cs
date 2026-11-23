@@ -1,6 +1,7 @@
 namespace ZienDisplayFixer.App.ViewModels;
 
 using System;
+using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ZienDisplayFixer.Core.Models;
@@ -19,27 +20,44 @@ public partial class DisplayItemViewModel : ObservableObject
     private string _name = "Display";
 
     [ObservableProperty]
-    private double _diagonalInches = 27.0;
+    [NotifyPropertyChangedFor(nameof(PhysicalSizeText))]
+    private double _diagonalInches = 24.0;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PhysicalSizeText))]
     private string _aspectRatio = "16:9";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ConnectionText))]
     private ConnectionType _connection = ConnectionType.Hdmi;
 
     [ObservableProperty]
-    private string _nativeModeText = "2560 × 1440 @ 144Hz";
+    private string _nativeModeText = "1920 × 1080 @ 60Hz";
 
     public DisplayMode? CurrentMode { get; set; }
+
+    public string CurrentModeText => CurrentMode != null
+        ? $"{CurrentMode.Width} × {CurrentMode.Height} @ {CurrentMode.RefreshHz:F0}Hz"
+        : "Unknown";
+
+    public string PhysicalSizeText => $"{DiagonalInches:F0}\" · {AspectRatio}";
+
+    public string ConnectionText => Connection switch
+    {
+        ConnectionType.DisplayPort => "DisplayPort",
+        ConnectionType.Hdmi => "HDMI",
+        ConnectionType.UsbC => "USB-C",
+        ConnectionType.Usb4 => "USB4",
+        ConnectionType.WiFi => "Wi-Fi",
+        ConnectionType.Vga => "VGA",
+        _ => "Internal / Direct"
+    };
+
     public bool IsPrimary { get; set; }
     public int PositionX { get; set; }
     public int PositionY { get; set; }
 
-    public IReadOnlyList<string> AspectRatioOptions => DisplaysViewModel.DefaultAspectRatioOptions;
-    public IReadOnlyList<ConnectionType> ConnectionOptions => DisplaysViewModel.DefaultConnectionOptions;
-
     public IRelayCommand? RemoveCommand { get; set; }
-
     public event EventHandler? Changed;
 
     partial void OnNameChanged(string value) => Changed?.Invoke(this, EventArgs.Empty);
@@ -103,7 +121,7 @@ public partial class DisplayItemViewModel : ObservableObject
             isPrimary: IsPrimary,
             positionX: PositionX,
             positionY: PositionY,
-            currentMode: CurrentMode ?? new DisplayMode(2560, 1440, 144.0, false),
+            currentMode: CurrentMode ?? new DisplayMode(1920, 1080, 60.0, false),
             physicalWidthMm: wMm,
             physicalHeightMm: hMm,
             connection: Connection);
@@ -114,7 +132,7 @@ public partial class DisplayItemViewModel : ObservableObject
         Action<DisplayItemViewModel>? onRemove = null,
         int displayIndex = 1)
     {
-        double diag = 27.0;
+        double diag = 24.0;
         string ar = "16:9";
         if (info.PhysicalWidthMm > 0 && info.PhysicalHeightMm > 0)
         {
@@ -125,14 +143,14 @@ public partial class DisplayItemViewModel : ObservableObject
 
         string nativeText = info.CurrentMode != null
             ? $"{info.CurrentMode.Width} × {info.CurrentMode.Height} @ {info.CurrentMode.RefreshHz:F0}Hz"
-            : "2560 × 1440 @ 144Hz";
+            : "1920 × 1080 @ 60Hz";
 
         var vm = new DisplayItemViewModel
         {
             Id = !string.IsNullOrEmpty(info.Id) ? info.Id : Guid.NewGuid().ToString(),
             DisplayIndex = displayIndex,
             Name = !string.IsNullOrWhiteSpace(info.Name) ? info.Name : (!string.IsNullOrWhiteSpace(info.Model) ? info.Model : "Display"),
-            DiagonalInches = diag > 0 ? diag : 27.0,
+            DiagonalInches = diag > 0 ? diag : 24.0,
             AspectRatio = ar,
             Connection = info.Connection != ConnectionType.Unknown ? info.Connection : ConnectionType.Hdmi,
             NativeModeText = nativeText,

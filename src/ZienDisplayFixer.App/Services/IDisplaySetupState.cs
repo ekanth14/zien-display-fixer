@@ -11,9 +11,7 @@ public interface IDisplaySetupState
     double LaptopScreenSize { get; set; }
     IBrush? WallpaperBrush { get; set; }
     string SelectedWallpaperPreset { get; set; }
-    bool IsDemoModeEnabled { get; set; }
     bool IsAnimationEnabled { get; set; }
     ObservableCollection<DisplayInfo> Displays { get; }
     event EventHandler? SetupChanged;
 }
-

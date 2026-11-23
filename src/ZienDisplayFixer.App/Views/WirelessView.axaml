@@ -68,7 +68,29 @@
                                    Foreground="{DynamicResource AppText}"
                                    IsVisible="{Binding HasDiscoveredDevices}" />
 
-                        <ItemsControl ItemsSource="{Binding DiscoveredDevices}">
+                        <!-- Empty state when no wireless devices found -->
+                        <Border IsVisible="{Binding !HasDiscoveredDevices}"
+                                Background="#16161B"
+                                BorderBrush="{DynamicResource AppBorder}"
+                                BorderThickness="1"
+                                CornerRadius="16"
+                                Padding="24">
+                            <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                <TextBlock Text="No wireless displays connected"
+                                           FontWeight="SemiBold"
+                                           FontSize="15"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{DynamicResource AppText}" />
+                                <TextBlock Text="Click 'Search again' or use the button below to connect to Miracast, AirPlay, or Wi-Fi screens."
+                                           Classes="Muted"
+                                           FontSize="13"
+                                           HorizontalAlignment="Center"
+                                           TextAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <ItemsControl ItemsSource="{Binding DiscoveredDevices}"
+                                      IsVisible="{Binding HasDiscoveredDevices}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:WirelessDisplayItemViewModel">
                                     <Border Background="#16161B"
