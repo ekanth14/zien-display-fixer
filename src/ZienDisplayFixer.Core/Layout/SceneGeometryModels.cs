@@ -55,3 +55,4 @@ public record SceneGeometry(
     DeviceGeometry Device,
     IReadOnlyList<MonitorGeometry> Monitors,
     IReadOnlyList<CableGeometry> Cables);
+

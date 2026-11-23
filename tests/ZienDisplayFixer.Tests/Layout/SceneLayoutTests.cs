@@ -235,3 +235,4 @@ public class SceneLayoutTests
         Assert.Equal("32:9", result.Monitors[3].AspectRatio);
     }
 }
+

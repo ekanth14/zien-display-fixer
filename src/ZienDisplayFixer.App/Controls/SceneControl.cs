@@ -57,6 +57,15 @@ public class SceneControl : Control
 
     private readonly DispatcherTimer _animationTimer;
     private double _animationOffset;
+    private bool _isAttached;
+    private SceneGeometry? _cachedScene;
+    private static readonly Pen SheathPen = new(CableSheathBrush, 6.0) { LineCap = PenLineCap.Round };
+    private static readonly Pen CorePen = new(CableCoreBrush, 3.6) { LineCap = PenLineCap.Round };
+    private static readonly Pen MonitorBorderPen = new(MonitorBorderBrush, 1.5);
+    private static readonly Pen PillBorderPen = new(MonitorBorderBrush, 1.2);
+    private static readonly Typeface TypefaceNormal = new("Inter", FontStyle.Normal, FontWeight.Normal);
+    private static readonly Typeface TypefaceSemiBold = new("Inter", FontStyle.Normal, FontWeight.SemiBold);
+    private static readonly Typeface TypefaceBold = new("Inter", FontStyle.Normal, FontWeight.Bold);
 
     // Palette Brushes & Pens
     private static readonly IBrush CableSheathBrush = new SolidColorBrush(Color.Parse("#3B3B43"));
@@ -107,7 +116,7 @@ public class SceneControl : Control
 
     private void OnAnimationTick(object? sender, EventArgs e)
     {
-        if (IsAnimationEnabled && IsVisible)
+        if (IsAnimationEnabled && IsEffectivelyVisible)
         {
             _animationOffset = (_animationOffset + 2.5) % 274.0; // 14 + 260 pulse cycle
             InvalidateVisual();
@@ -117,9 +126,17 @@ public class SceneControl : Control
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
+
+        if (change.Property == DeviceTypeProperty ||
+            change.Property == LaptopScreenSizeProperty ||
+            change.Property == DisplaysProperty)
+        {
+            _cachedScene = null;
+        }
+
         if (change.Property == IsAnimationEnabledProperty)
         {
-            if (IsAnimationEnabled)
+            if (IsAnimationEnabled && _isAttached)
                 _animationTimer.Start();
             else
                 _animationTimer.Stop();
@@ -129,6 +146,7 @@ public class SceneControl : Control
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
+        _isAttached = true;
         if (IsAnimationEnabled)
             _animationTimer.Start();
     }
@@ -136,6 +154,7 @@ public class SceneControl : Control
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnDetachedFromVisualTree(e);
+        _isAttached = false;
         _animationTimer.Stop();
     }
 
@@ -146,8 +165,12 @@ public class SceneControl : Control
         if (Bounds.Width <= 0 || Bounds.Height <= 0)
             return;
 
-        var displayList = (Displays as IReadOnlyList<DisplayInfo>) ?? Displays?.ToList() ?? [];
-        var scene = SceneLayout.Calculate(DeviceType, LaptopScreenSize, displayList, SceneLayout.CanvasWidth, SceneLayout.CanvasHeight);
+        if (_cachedScene == null)
+        {
+            var displayList = (Displays as IReadOnlyList<DisplayInfo>) ?? Displays?.ToList() ?? [];
+            _cachedScene = SceneLayout.Calculate(DeviceType, LaptopScreenSize, displayList, SceneLayout.CanvasWidth, SceneLayout.CanvasHeight);
+        }
+        var scene = _cachedScene;
 
         // Uniform aspect fit to logical 1000 x 560 coordinate space
         double scale = Math.Min(Bounds.Width / SceneLayout.CanvasWidth, Bounds.Height / SceneLayout.CanvasHeight);
@@ -178,7 +201,7 @@ public class SceneControl : Control
 
                 // Centered wireless pill badge
                 var pillRect = new Rect(c.PillX, c.PillY, c.PillWidth, c.PillHeight);
-                context.DrawRectangle(CardBgBrush, new Pen(MonitorBorderBrush, 1.2), pillRect, 10, 10);
+                context.DrawRectangle(CardBgBrush, PillBorderPen, pillRect, 10, 10);
 
                 // Radio waves / Wi-Fi text
                 DrawFormattedString(context, "Wi-Fi", 10.0, TextPrimaryBrush, pillRect, FontWeight.SemiBold);
@@ -202,18 +225,10 @@ public class SceneControl : Control
                 }
 
                 // 1. Sheath outer wire (stroke width 6, #3B3B43)
-                var sheathPen = new Pen(CableSheathBrush, 6.0)
-                {
-                    LineCap = PenLineCap.Round
-                };
-                context.DrawGeometry(null, sheathPen, wireGeom);
+                context.DrawGeometry(null, SheathPen, wireGeom);
 
                 // 2. Core wire (stroke width 3.6, #202026)
-                var corePen = new Pen(CableCoreBrush, 3.6)
-                {
-                    LineCap = PenLineCap.Round
-                };
-                context.DrawGeometry(null, corePen, wireGeom);
+                context.DrawGeometry(null, CorePen, wireGeom);
 
                 // 3. Light pulse with stroke dash array (14, 260) and animated offset (#CDB78F)
                 var pulsePen = new Pen(AccentChampagneBrush, 3.6)
@@ -225,7 +240,7 @@ public class SceneControl : Control
 
                 // 4. Labeled connector pill (HDMI, DP, USB-C, USB-4, VGA)
                 var pillRect = new Rect(c.PillX, c.PillY, c.PillWidth, c.PillHeight);
-                context.DrawRectangle(CardBgBrush, new Pen(MonitorBorderBrush, 1.2), pillRect, 10, 10);
+                context.DrawRectangle(CardBgBrush, PillBorderPen, pillRect, 10, 10);
                 DrawFormattedString(context, c.ConnectorText, 10.0, TextPrimaryBrush, pillRect, FontWeight.SemiBold);
             }
         }
@@ -359,7 +374,12 @@ public class SceneControl : Control
         if (string.IsNullOrEmpty(text) || targetRect.Width <= 0 || targetRect.Height <= 0)
             return;
 
-        var typeface = new Typeface(FontFamily.Default, FontStyle.Normal, weight);
+        var typeface = weight switch
+        {
+            FontWeight.Bold => TypefaceBold,
+            FontWeight.SemiBold => TypefaceSemiBold,
+            _ => TypefaceNormal
+        };
         var formattedText = new FormattedText(
             text,
             CultureInfo.InvariantCulture,
@@ -379,3 +399,4 @@ public class SceneControl : Control
         context.DrawText(formattedText, new Point(x, y));
     }
 }
+

@@ -207,8 +207,8 @@ public static class SceneLayout
 
             // Stand and base geometry
             double extraH = monTotalH - monScreenH;
-            double baseH = Math.Max(5.0, extraH * 0.35);
-            double standH = extraH - baseH;
+            double baseH = Math.Min(extraH * 0.5, Math.Max(3.0, extraH * 0.35));
+            double standH = Math.Max(0.0, extraH - baseH);
 
             double standW = Math.Clamp(monW * 0.08, 10.0, 24.0);
             double standX = colCenterX - standW / 2.0;
@@ -406,3 +406,4 @@ public static class SceneLayout
         double Width,
         double Height);
 }
+
