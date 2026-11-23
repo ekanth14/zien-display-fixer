@@ -3,16 +3,99 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:ZienDisplayFixer.App.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+             xmlns:views="using:ZienDisplayFixer.App.Views"
+             xmlns:ctrl="using:ZienDisplayFixer.App.Controls"
+             xmlns:conv="using:ZienDisplayFixer.App.Converters"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
              x:Class="ZienDisplayFixer.App.Views.HomeView"
              x:DataType="vm:HomeViewModel">
-    <Grid Margin="32">
-        <Border Classes="Card" Padding="32" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <StackPanel Spacing="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Classes="PageTitle" Text="Workstation &amp; Displays" HorizontalAlignment="Center" />
-                <TextBlock Classes="Muted" Text="Auto-detect native resolution, optimal refresh rates, and aspect ratio." HorizontalAlignment="Center" />
-                <Button Classes="ActionFix" Content="Fix my screens" Margin="0,16,0,0" HorizontalAlignment="Center" />
+
+    <UserControl.Resources>
+        <conv:EqualityToBooleanConverter x:Key="EqualConverter" />
+    </UserControl.Resources>
+
+    <Grid>
+        <!-- Main Stage & Actions Layout -->
+        <Grid RowDefinitions="*,Auto" Margin="24">
+            <!-- Top Stage Card containing SceneControl -->
+            <Border Grid.Row="0"
+                    Classes="Card"
+                    Padding="16"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    MinHeight="360">
+                <ctrl:SceneControl Displays="{Binding Displays}"
+                                   DeviceType="{Binding DeviceType}"
+                                   LaptopScreenSize="{Binding LaptopScreenSize}"
+                                   HorizontalAlignment="Stretch"
+                                   VerticalAlignment="Stretch" />
+            </Border>
+
+            <!-- Actions Section Below Stage -->
+            <StackPanel Grid.Row="1"
+                        Spacing="12"
+                        HorizontalAlignment="Center"
+                        Margin="0,16,0,0">
+                <!-- Large "Fix my screens" Pill Button -->
+                <Button Classes="ActionFix"
+                        Content="Fix my screens"
+                        Command="{Binding FixScreensCommand}"
+                        IsEnabled="{Binding CanFixScreens}"
+                        HorizontalAlignment="Center" />
+
+                <!-- Status Label -->
+                <TextBlock Classes="Muted"
+                           Text="{Binding StatusText}"
+                           HorizontalAlignment="Center"
+                           FontSize="13" />
+
+                <!-- Error Message Block (if driver rejects mode or error occurs) -->
+                <TextBlock Text="{Binding ErrorMessage}"
+                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                           Foreground="{DynamicResource AppWarning}"
+                           FontWeight="Medium"
+                           FontSize="13"
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap" />
+
+                <!-- Segmented Button Bar for Screen Topologies -->
+                <Border Classes="SegmentedGroup"
+                        HorizontalAlignment="Center"
+                        Margin="0,4,0,0">
+                    <StackPanel Orientation="Horizontal" Spacing="2">
+                        <Button Classes="SegmentedItem"
+                                Classes.Active="{Binding CurrentTopology, Converter={StaticResource EqualConverter}, ConverterParameter=Extend}"
+                                Content="Extend"
+                                Command="{Binding SetTopologyCommand}"
+                                CommandParameter="Extend" />
+                        <Button Classes="SegmentedItem"
+                                Classes.Active="{Binding CurrentTopology, Converter={StaticResource EqualConverter}, ConverterParameter=Duplicate}"
+                                Content="Duplicate"
+                                Command="{Binding SetTopologyCommand}"
+                                CommandParameter="Duplicate" />
+                        <Button Classes="SegmentedItem"
+                                Classes.Active="{Binding CurrentTopology, Converter={StaticResource EqualConverter}, ConverterParameter=InternalOnly}"
+                                Content="Main only"
+                                Command="{Binding SetTopologyCommand}"
+                                CommandParameter="InternalOnly" />
+                        <Button Classes="SegmentedItem"
+                                Classes.Active="{Binding CurrentTopology, Converter={StaticResource EqualConverter}, ConverterParameter=ExternalOnly}"
+                                Content="Second only"
+                                Command="{Binding SetTopologyCommand}"
+                                CommandParameter="ExternalOnly" />
+                    </StackPanel>
+                </Border>
             </StackPanel>
-        </Border>
+        </Grid>
+
+        <!-- In-App Modal Overlay for 12-Second Fail-Safe Confirmation -->
+        <Grid IsVisible="{Binding IsConfirmationVisible}"
+              Background="#90000000"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Stretch">
+            <views:ModeConfirmationDialog DataContext="{Binding Confirmation}"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
+        </Grid>
     </Grid>
 </UserControl>

@@ -134,6 +134,9 @@ public static class CoreGraphics
     public static extern int CGConfigureDisplayWithDisplayMode(IntPtr configRef, uint display, IntPtr mode, IntPtr options);
 
     [DllImport(CoreGraphicsLib)]
+    public static extern int CGConfigureDisplayMirrorOfDisplay(IntPtr configRef, uint display, uint masterDisplay);
+
+    [DllImport(CoreGraphicsLib)]
     public static extern int CGCompleteDisplayConfiguration(IntPtr configRef, uint option);
 
     [DllImport(CoreGraphicsLib)]

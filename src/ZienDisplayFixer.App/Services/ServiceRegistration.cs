@@ -17,16 +17,19 @@ public static class ServiceRegistration
         {
             services.AddSingleton<IDisplayService, WindowsDisplayService>();
             services.AddSingleton<IEdidReader, WindowsEdidReader>();
+            services.AddSingleton<IScreenModeService, WindowsScreenModeService>();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
             services.AddSingleton<IDisplayService, MacDisplayService>();
             services.AddSingleton<IEdidReader, MacEdidReader>();
+            services.AddSingleton<IScreenModeService, MacScreenModeService>();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
             services.AddSingleton<IDisplayService, LinuxDisplayService>();
             services.AddSingleton<IEdidReader, LinuxEdidReader>();
+            services.AddSingleton<IScreenModeService, LinuxScreenModeService>();
         }
         else
         {

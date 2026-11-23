@@ -342,28 +342,28 @@
 - Consumes: `IDisplayService`, `IScreenModeService`, `BestModePicker`
 - Produces: `HomeViewModel`, `ModeConfirmationViewModel`, `HomeView`
 
-- [ ] **Step 1: Implement `IScreenModeService`**
+- [x] **Step 1: Implement `IScreenModeService`**
   - Windows: execute `DisplaySwitch.exe /extend`, `/clone`, `/internal`, `/external`.
   - macOS: CoreGraphics mirror API.
   - Linux: `xrandr --same-as` / `--right-of`.
 
-- [ ] **Step 2: Implement `ModeConfirmationViewModel`**
+- [x] **Step 2: Implement `ModeConfirmationViewModel`**
   12-second countdown timer. Properties: `RemainingSeconds`, `KeepCommand`, `RevertCommand`. If timer hits 0 without user click, automatically triggers revert.
 
-- [ ] **Step 3: Implement `HomeViewModel`**
+- [x] **Step 3: Implement `HomeViewModel`**
   - "Fix my screens" command: evaluates all displays, picks best mode via `BestModePicker` (capped at 1080p@60Hz for VGA/WiFi), tests modes first, applies all in batch, then opens confirmation overlay.
   - On Revert or timeout: calls `IDisplayService.RestorePreviousModesAsync()`.
   - Topology segmented buttons: Extend, Duplicate, Main only, Second only.
   - Status text computation ("X of Y displays can be improved" / "All displays are at their best settings").
 
-- [ ] **Step 4: Build `HomeView.axaml` and `ModeConfirmationDialog.axaml`**
+- [x] **Step 4: Build `HomeView.axaml` and `ModeConfirmationDialog.axaml`**
   Assemble `SceneControl`, large "Fix my screens" button, status text, segmented mode buttons, and the confirmation modal overlay.
 
-- [ ] **Step 5: Verify build & workflow**
+- [x] **Step 5: Verify build & workflow**
   Run: `dotnet run --project src/ZienDisplayFixer.App`
   Test mode application, countdown countdown tick, and revert flow.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   ```bash
   git add src/ZienDisplayFixer.App/
   git commit -m "feat: implement Home view, screen mode switcher, and 12-second fail-safe confirmation dialog"
