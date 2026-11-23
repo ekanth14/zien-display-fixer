@@ -17,5 +17,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ZienDisplayFixer.Core\ZienDisplayFixer.Core.csproj" />
+    <ProjectReference Include="..\..\src\ZienDisplayFixer.App\ZienDisplayFixer.App.csproj" />
   </ItemGroup>
 </Project>

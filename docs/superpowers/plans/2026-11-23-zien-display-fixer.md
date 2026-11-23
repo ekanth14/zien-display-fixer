@@ -57,32 +57,32 @@
 - Produces: `BestModePicker.PickBestMode(IEnumerable<DisplayMode> availableModes, DisplayInfo display)`
 - Produces: `IDisplayService`, `IEdidReader`, `IScreenModeService`, `IWallpaperService`, `IWirelessDisplayLauncher`, `IAutostartService`
 
-- [ ] **Step 1: Write the failing unit tests for BestModePicker**
+- [x] **Step 1: Write the failing unit tests for BestModePicker**
   Create `ZienDisplayFixer.Tests/Engine/BestModePickerTests.cs` testing:
   - Highest resolution picked first among 1080p, 1440p, 4K modes.
   - Highest refresh rate (e.g., 144Hz over 60Hz) picked when resolution is tied.
   - Interlaced modes (`IsInterlaced == true`) are ignored.
   - VGA / Wi-Fi connections are capped at 1920x1080 @ 60Hz.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
   Run: `dotnet test --filter FullyQualifiedName~BestModePickerTests`
   Expected: FAIL (project/classes not found).
 
-- [ ] **Step 3: Setup C# solution structure and projects**
+- [x] **Step 3: Setup C# solution structure and projects**
   Convert the F# project to standard C# .NET 10 projects:
   - `src/ZienDisplayFixer.Core/ZienDisplayFixer.Core.csproj`
   - `src/ZienDisplayFixer.App/ZienDisplayFixer.App.csproj`
   - `tests/ZienDisplayFixer.Tests/ZienDisplayFixer.Tests.csproj`
   Define `DisplayInfo`, `DisplayMode`, `ConnectionType`, `DeviceType`, all 6 interfaces, platform stubs throwing `NotSupportedException`, and `ServiceRegistration.cs` using `IServiceCollection`.
 
-- [ ] **Step 4: Implement `BestModePicker`**
+- [x] **Step 4: Implement `BestModePicker`**
   Implement the filtering logic in `BestModePicker.cs`: filter out interlaced modes, sort by total pixels descending then refresh rate descending, apply connection caps for VGA/WiFi.
 
-- [ ] **Step 5: Run tests and verify build**
+- [x] **Step 5: Run tests and verify build**
   Run: `dotnet test`
   Expected: All tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   ```bash
   git add .
   git commit -m "feat: setup solution structure, core models, service interfaces, and BestModePicker with tests"
@@ -102,24 +102,24 @@
 - Consumes: `IDisplayService`, `DisplayInfo`, `DisplayMode`
 - Produces: `WindowsDisplayService : IDisplayService` with `GetDisplaysAsync`, `GetModesAsync`, `TestModeAsync`, `ApplyModeAsync`, `RestorePreviousModesAsync`, `DisplaysChanged`
 
-- [ ] **Step 1: Define Win32 DEVMODEW struct and User32 P/Invoke signatures**
+- [x] **Step 1: Define Win32 DEVMODEW struct and User32 P/Invoke signatures**
   Define `DEVMODEW` with exact 220-byte layout (`Marshal.SizeOf<DEVMODEW>() == 220`), `EnumDisplayDevices`, `EnumDisplaySettingsEx`, and `ChangeDisplaySettingsEx`.
   Constants: `CDS_TEST`, `CDS_UPDATEREGISTRY`, `CDS_NORESET`, `DISP_CHANGE_SUCCESSFUL`, `DISPLAY_DEVICE_ATTACHED_TO_DESKTOP`.
 
-- [ ] **Step 2: Implement display enumeration in `WindowsDisplayService`**
+- [x] **Step 2: Implement display enumeration in `WindowsDisplayService`**
   Filter only devices with `DISPLAY_DEVICE_ATTACHED_TO_DESKTOP`. Read current mode and position ($X, Y$). Enumerate all valid supported modes with `EnumDisplaySettingsEx`.
 
-- [ ] **Step 3: Implement mode testing and atomic batch apply**
+- [x] **Step 3: Implement mode testing and atomic batch apply**
   Test with `CDS_TEST`. Apply each monitor change with `CDS_UPDATEREGISTRY | CDS_NORESET`. Calculate bounding boxes: if higher resolution causes overlap, re-tile displays left-to-right maintaining original index order. Perform final commit call.
 
-- [ ] **Step 4: Implement mode restore and change notification**
+- [x] **Step 4: Implement mode restore and change notification**
   Save pre-apply snapshot to support `RestorePreviousModesAsync`. Subscribe to `Microsoft.Win32.SystemEvents.DisplaySettingsChanged` and raise `DisplaysChanged`.
 
-- [ ] **Step 5: Verify build & P/Invoke layout**
+- [x] **Step 5: Verify build & P/Invoke layout**
   Run: `dotnet build`
   Verify `DEVMODEW` struct size in a unit test (`Assert.Equal(220, Marshal.SizeOf<DEVMODEW>())`).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   ```bash
   git add src/ZienDisplayFixer.App/Services/Windows/
   git commit -m "feat: implement WindowsDisplayService with Win32 CCD and DEVMODEW layout"

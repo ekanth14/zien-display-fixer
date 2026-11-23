@@ -13,7 +13,7 @@ public static class ServiceRegistration
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            services.AddSingleton<IDisplayService, WindowsDisplayServiceStub>();
+            services.AddSingleton<IDisplayService, WindowsDisplayService>();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {

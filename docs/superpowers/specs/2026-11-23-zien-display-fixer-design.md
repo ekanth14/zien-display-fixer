@@ -287,3 +287,10 @@ Transforms display metadata into scalable coordinate geometry for the interactiv
    - Wire display change events and automatic background optimization triggers.
    - End-to-end testing and verification.
 
+Set up the solution structure in my existing Avalonia MVVM project:
+- Models: DisplayInfo (Id, Name, Model, IsPrimary, PositionX/Y, CurrentMode, PhysicalWidthMm, PhysicalHeightMm, Connection), DisplayMode (Width, Height, RefreshHz, IsInterlaced), ConnectionType enum (Hdmi, DisplayPort, UsbC, Usb4, Vga, WiFi, Unknown), DeviceType enum (Laptop, Pc).
+- Service interfaces: IDisplayService (GetDisplaysAsync, GetModesAsync(id), TestModeAsync, ApplyModeAsync, DisplaysChanged event), IEdidReader, IAutostartService, IWallpaperService, IWirelessDisplayLauncher, IScreenModeService.
+- Folders Services/Windows, Services/MacOS, Services/Linux with stubs that throw NotSupportedException.
+- Dependency injection (Microsoft.Extensions.DependencyInjection) that registers the right implementations per OS.
+- Core/BestModePicker: highest resolution first, then highest refresh rate, ignoring interlaced modes. Add a ZienDisplayFixer.Tests xUnit project with tests for it.
+No UI yet.
