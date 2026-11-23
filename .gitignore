@@ -6,4 +6,6 @@ obj/
 .idea/
 .vscode/
 .superpowers/
+*.slnx
+
 
