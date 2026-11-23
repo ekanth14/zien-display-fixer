@@ -3,15 +3,160 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:ZienDisplayFixer.App.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+             mc:Ignorable="d" d:DesignWidth="840" d:DesignHeight="600"
              x:Class="ZienDisplayFixer.App.Views.WirelessView"
              x:DataType="vm:WirelessViewModel">
-    <Grid Margin="32">
-        <Border Classes="Card" Padding="32" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <StackPanel Spacing="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Classes="PageTitle" Text="Wireless Displays" HorizontalAlignment="Center" />
-                <TextBlock Classes="Muted" Text="Cast and connect to nearby Miracast and wireless displays." HorizontalAlignment="Center" />
-            </StackPanel>
-        </Border>
-    </Grid>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="24" HorizontalAlignment="Stretch" MaxWidth="840">
+            <Border Classes="Card"
+                    Padding="32"
+                    HorizontalAlignment="Stretch">
+                <StackPanel Spacing="24">
+                    <!-- Header -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Wireless displays"
+                                   FontSize="22"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AppText}" />
+                        <TextBlock Text="Switch on the display and make sure wireless display is enabled on it."
+                                   Classes="Muted"
+                                   FontSize="13" />
+                    </StackPanel>
+
+                    <!-- Wide Pill "Search again" Button -->
+                    <Button Classes="Pill Wide"
+                            Content="Search again"
+                            Command="{Binding SearchAgainCommand}"
+                            IsEnabled="{Binding !IsScanning}" />
+
+                    <!-- Scanning progress indicator -->
+                    <Border CornerRadius="2"
+                            ClipToBounds="True"
+                            Height="4"
+                            IsVisible="{Binding IsScanning}">
+                        <ProgressBar IsIndeterminate="True"
+                                     Foreground="{DynamicResource AppAccent}"
+                                     Background="{DynamicResource AppBorder}" />
+                    </Border>
+
+                    <!-- Status message (if any) -->
+                    <TextBlock Text="{Binding StatusMessage}"
+                               Classes="Muted"
+                               FontSize="13"
+                               HorizontalAlignment="Center"
+                               IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                    <!-- Unsupported warning if IsSupported is false -->
+                    <Border IsVisible="{Binding !IsSupported}"
+                            Background="#20D4A35F"
+                            BorderBrush="{DynamicResource AppWarning}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="16">
+                        <TextBlock Text="Wireless display casting is not supported or required tools (e.g. gnome-network-displays) are missing on this system."
+                                   Foreground="{DynamicResource AppWarning}"
+                                   TextWrapping="Wrap"
+                                   FontSize="13" />
+                    </Border>
+
+                    <!-- Discovered Devices List -->
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Available devices"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AppText}"
+                                   IsVisible="{Binding HasDiscoveredDevices}" />
+
+                        <ItemsControl ItemsSource="{Binding DiscoveredDevices}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:WirelessDisplayItemViewModel">
+                                    <Border Background="#16161B"
+                                            BorderBrush="{DynamicResource AppBorder}"
+                                            BorderThickness="1"
+                                            CornerRadius="16"
+                                            Padding="20"
+                                            Margin="0,0,0,10">
+                                        <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                            <!-- TV / Display Icon / Badge -->
+                                            <Border Grid.Column="0"
+                                                    Background="{DynamicResource AppBorder}"
+                                                    CornerRadius="10"
+                                                    Width="42"
+                                                    Height="42"
+                                                    Margin="0,0,16,0"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="📺"
+                                                           FontSize="18"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" />
+                                            </Border>
+
+                                            <!-- Device Name and Size -->
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                                                <TextBlock Text="{Binding Name}"
+                                                           FontWeight="SemiBold"
+                                                           FontSize="15"
+                                                           Foreground="{DynamicResource AppText}" />
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock Text="{Binding SizeText}"
+                                                               Classes="Muted"
+                                                               FontSize="12" />
+                                                    <TextBlock Text="• Miracast / Wi-Fi"
+                                                               Classes="Muted"
+                                                               FontSize="12" />
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <!-- Connect Button or Connected Status -->
+                                            <Panel Grid.Column="2" VerticalAlignment="Center">
+                                                <Button Classes="AccentPill"
+                                                        Content="Connect"
+                                                        Command="{Binding ConnectCommand}"
+                                                        IsVisible="{Binding !IsConnected}" />
+
+                                                <Border Background="#1586B894"
+                                                        BorderBrush="{DynamicResource AppOk}"
+                                                        BorderThickness="1"
+                                                        CornerRadius="999"
+                                                        Padding="16,8"
+                                                        IsVisible="{Binding IsConnected}">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                        <TextBlock Text="✓"
+                                                                   Foreground="{DynamicResource AppOk}"
+                                                                   FontWeight="Bold"
+                                                                   FontSize="12" />
+                                                        <TextBlock Text="Connected"
+                                                                   Foreground="{DynamicResource AppOk}"
+                                                                   FontWeight="SemiBold"
+                                                                   FontSize="13" />
+                                                    </StackPanel>
+                                                </Border>
+                                            </Panel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Divider -->
+                    <Rectangle Height="1" Fill="{DynamicResource AppBorder}" Margin="0,8" />
+
+                    <!-- Native system shortcut button / hint -->
+                    <StackPanel Spacing="8" HorizontalAlignment="Center">
+                        <Button Classes="Pill"
+                                Content="Open System Wireless Display Settings"
+                                Command="{Binding OpenSystemSettingsCommand}"
+                                HorizontalAlignment="Center" />
+                        <TextBlock Text="Use the operating system display settings to manage paired casting devices and projections."
+                                   Classes="Muted"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
 </UserControl>

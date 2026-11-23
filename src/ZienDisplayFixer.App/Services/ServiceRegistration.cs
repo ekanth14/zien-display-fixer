@@ -19,6 +19,7 @@ public static class ServiceRegistration
             services.AddSingleton<IEdidReader, WindowsEdidReader>();
             services.AddSingleton<IScreenModeService, WindowsScreenModeService>();
             services.AddSingleton<IWallpaperService, WindowsWallpaperService>();
+            services.AddSingleton<IWirelessDisplayLauncher, WindowsWirelessDisplayLauncher>();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
@@ -26,6 +27,7 @@ public static class ServiceRegistration
             services.AddSingleton<IEdidReader, MacEdidReader>();
             services.AddSingleton<IScreenModeService, MacScreenModeService>();
             services.AddSingleton<IWallpaperService, MacWallpaperService>();
+            services.AddSingleton<IWirelessDisplayLauncher, MacWirelessDisplayLauncher>();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
@@ -33,6 +35,7 @@ public static class ServiceRegistration
             services.AddSingleton<IEdidReader, LinuxEdidReader>();
             services.AddSingleton<IScreenModeService, LinuxScreenModeService>();
             services.AddSingleton<IWallpaperService, LinuxWallpaperService>();
+            services.AddSingleton<IWirelessDisplayLauncher, LinuxWirelessDisplayLauncher>();
         }
         else
         {
