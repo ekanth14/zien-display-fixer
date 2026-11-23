@@ -12,6 +12,7 @@ public partial class SettingsViewModel : ViewModelBase
 {
     private readonly ISettingsService? _settingsService;
     private readonly IDisplaySetupState? _setupState;
+    private readonly IAutostartService? _autostartService;
     private bool _isInitializing;
 
     public string Title => "Settings";
@@ -32,14 +33,18 @@ public partial class SettingsViewModel : ViewModelBase
     private string? _statusMessage = "Settings are saved automatically.";
 
     public SettingsViewModel()
-        : this(null, null)
+        : this(null, null, null)
     {
     }
 
-    public SettingsViewModel(ISettingsService? settingsService, IDisplaySetupState? setupState)
+    public SettingsViewModel(
+        ISettingsService? settingsService,
+        IDisplaySetupState? setupState,
+        IAutostartService? autostartService = null)
     {
         _settingsService = settingsService;
         _setupState = setupState;
+        _autostartService = autostartService;
 
         _isInitializing = true;
         try
@@ -52,13 +57,15 @@ public partial class SettingsViewModel : ViewModelBase
                 _isAnimationEnabled = current.IsAnimationEnabled;
                 _isDemoModeEnabled = current.IsDemoModeEnabled;
             }
-            else
+            else if (_setupState != null)
             {
-                if (_setupState != null)
-                {
-                    _isAnimationEnabled = _setupState.IsAnimationEnabled;
-                    _isDemoModeEnabled = _setupState.IsDemoModeEnabled;
-                }
+                _isAnimationEnabled = _setupState.IsAnimationEnabled;
+                _isDemoModeEnabled = _setupState.IsDemoModeEnabled;
+            }
+
+            if (_autostartService != null)
+            {
+                _startAtLogin = _autostartService.IsAutostartEnabled();
             }
 
             if (_setupState != null)
@@ -90,14 +97,20 @@ public partial class SettingsViewModel : ViewModelBase
 
     private static void RunOnUIThread(Action action)
     {
-        if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+        try
         {
-            action();
+            if (Avalonia.Application.Current != null && Avalonia.Threading.Dispatcher.UIThread is { } dispatcher && !dispatcher.CheckAccess())
+            {
+                dispatcher.Post(action);
+                return;
+            }
         }
-        else
+        catch
         {
-            Avalonia.Threading.Dispatcher.UIThread.Post(action);
+            // Headless / unit testing fallback
         }
+
+        action();
     }
 
     private void OnSettingsChangedFromService(object? sender, AppSettings newSettings)
@@ -199,7 +212,22 @@ public partial class SettingsViewModel : ViewModelBase
     }
 
     partial void OnFixAutomaticallyOnConnectChanged(bool value) => OnSettingChanged();
-    partial void OnStartAtLoginChanged(bool value) => OnSettingChanged();
+
+    partial void OnStartAtLoginChanged(bool value)
+    {
+        if (!_isInitializing)
+        {
+            try
+            {
+                _autostartService?.SetAutostart(value);
+            }
+            catch
+            {
+                // Graceful fallback
+            }
+        }
+        OnSettingChanged();
+    }
 
     partial void OnIsAnimationEnabledChanged(bool value)
     {

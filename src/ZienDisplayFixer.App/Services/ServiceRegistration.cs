@@ -20,6 +20,7 @@ public static class ServiceRegistration
             services.AddSingleton<IScreenModeService, WindowsScreenModeService>();
             services.AddSingleton<IWallpaperService, WindowsWallpaperService>();
             services.AddSingleton<IWirelessDisplayLauncher, WindowsWirelessDisplayLauncher>();
+            services.AddSingleton<IAutostartService, WindowsAutostartService>();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
@@ -28,6 +29,7 @@ public static class ServiceRegistration
             services.AddSingleton<IScreenModeService, MacScreenModeService>();
             services.AddSingleton<IWallpaperService, MacWallpaperService>();
             services.AddSingleton<IWirelessDisplayLauncher, MacWirelessDisplayLauncher>();
+            services.AddSingleton<IAutostartService, MacAutostartService>();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
@@ -36,6 +38,7 @@ public static class ServiceRegistration
             services.AddSingleton<IScreenModeService, LinuxScreenModeService>();
             services.AddSingleton<IWallpaperService, LinuxWallpaperService>();
             services.AddSingleton<IWirelessDisplayLauncher, LinuxWirelessDisplayLauncher>();
+            services.AddSingleton<IAutostartService, LinuxAutostartService>();
         }
         else
         {
@@ -54,6 +57,9 @@ public static class ServiceRegistration
         services.AddSingleton<WirelessViewModel>();
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<MainViewModel>();
+
+        // Background Monitors
+        services.AddSingleton<DisplayHotPlugMonitor>();
 
         return services;
     }
