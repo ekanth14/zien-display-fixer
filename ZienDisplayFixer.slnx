@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ZienDisplayFixer.App/ZienDisplayFixer.App.csproj" />
+    <Project Path="src/ZienDisplayFixer.Core/ZienDisplayFixer.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ZienDisplayFixer.Tests/ZienDisplayFixer.Tests.csproj" />
+  </Folder>
+</Solution>
