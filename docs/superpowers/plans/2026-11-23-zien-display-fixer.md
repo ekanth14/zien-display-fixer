@@ -299,28 +299,28 @@
 - Produces: `SceneLayout.Calculate(DeviceType device, double laptopInches, IReadOnlyList<DisplayInfo> displays, Size viewportSize) -> SceneGeometry`
 - Produces: `SceneControl : Control` with Avalonia `Render(DrawingContext context)`
 
-- [ ] **Step 1: Write unit tests for `SceneLayout`**
+- [x] **Step 1: Write unit tests for `SceneLayout`**
   Verify coordinates calculation:
   - Laptop or PC placed centrally at $(500, 265)$.
   - Displays partitioned into Left (odd/alternating) and Right (even) sides, stacked up to 3 per column, forming outward columns when $> 3$.
   - Scaled physical dimensions according to aspect ratio and diagonal.
   - Bézier cable curves endpoints and pill badge placement.
 
-- [ ] **Step 2: Implement `SceneLayout` in pure C#**
+- [x] **Step 2: Implement `SceneLayout` in pure C#**
   Implement geometric layout mathematics. Run unit tests to verify accuracy.
 
-- [ ] **Step 3: Implement `SceneControl` custom control**
+- [x] **Step 3: Implement `SceneControl` custom control**
   Override `Render(DrawingContext context)`. Draw:
   - Device (Laptop with keyboard notch / PC tower with ZIEN logo).
   - Monitors with wallpaper gradient/image, large display number, status dot (green/amber), size/aspect tags, and resolution/refresh text.
   - Cables with Bézier curves, animated pulse dashes (30 FPS dispatcher timer), Wi-Fi air waves, and port label pills.
   - Respect `IsAnimationEnabled` property.
 
-- [ ] **Step 4: Run tests and verify rendering**
+- [x] **Step 4: Run tests and verify rendering**
   Run: `dotnet test --filter FullyQualifiedName~SceneLayoutTests`
   Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
   ```bash
   git add src/ZienDisplayFixer.Core/Layout/ src/ZienDisplayFixer.App/Controls/ tests/ZienDisplayFixer.Tests/Layout/
   git commit -m "feat: implement SceneLayout math and custom SceneControl with animated vector cables"
