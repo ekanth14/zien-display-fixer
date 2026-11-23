@@ -381,4 +381,20 @@ public class HomeViewModelTests
         Assert.Single(screenMode.SetTopologyCalls);
         Assert.Equal(ScreenTopology.Duplicate, screenMode.SetTopologyCalls[0]);
     }
+
+    [Fact]
+    public void IsAnimationEnabled_SyncsWithDisplaySetupState()
+    {
+        var setupState = new ZienDisplayFixer.App.Services.DisplaySetupState();
+        var vm = new HomeViewModel(null, null, null, setupState);
+
+        Assert.True(vm.IsAnimationEnabled);
+        Assert.True(setupState.IsAnimationEnabled);
+
+        vm.IsAnimationEnabled = false;
+        Assert.False(setupState.IsAnimationEnabled);
+
+        setupState.IsAnimationEnabled = true;
+        Assert.True(vm.IsAnimationEnabled);
+    }
 }

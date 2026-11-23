@@ -42,6 +42,9 @@ public static class ServiceRegistration
             throw new PlatformNotSupportedException("Unsupported operating system.");
         }
 
+        // Settings Service
+        services.AddSingleton<ISettingsService, SettingsService>();
+
         // Shared Setup State
         services.AddSingleton<IDisplaySetupState, DisplaySetupState>();
 

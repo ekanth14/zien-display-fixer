@@ -28,6 +28,7 @@
                                    DeviceType="{Binding DeviceType}"
                                    LaptopScreenSize="{Binding LaptopScreenSize}"
                                    WallpaperBrush="{Binding WallpaperBrush}"
+                                   IsAnimationEnabled="{Binding IsAnimationEnabled}"
                                    HorizontalAlignment="Stretch"
                                    VerticalAlignment="Stretch" />
             </Border>

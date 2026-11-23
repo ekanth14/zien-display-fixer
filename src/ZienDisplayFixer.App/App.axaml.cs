@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ZienDisplayFixer.App.Services;
 using ZienDisplayFixer.App.ViewModels;
 using ZienDisplayFixer.App.Views;
+using ZienDisplayFixer.Core.Interfaces;
 
 namespace ZienDisplayFixer.App;
 
@@ -25,6 +26,11 @@ public partial class App : Application
 
         var provider = services.BuildServiceProvider();
         Services = provider;
+
+        if (provider.GetService<ISettingsService>() is { } settingsService)
+        {
+            _ = settingsService.LoadSettingsAsync();
+        }
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {

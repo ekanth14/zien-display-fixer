@@ -25,6 +25,9 @@ public partial class DisplaySetupState : ObservableObject, IDisplaySetupState
     [ObservableProperty]
     private bool _isDemoModeEnabled = true;
 
+    [ObservableProperty]
+    private bool _isAnimationEnabled = true;
+
     public ObservableCollection<DisplayInfo> Displays { get; } = [];
 
     public event EventHandler? SetupChanged;
@@ -60,6 +63,11 @@ public partial class DisplaySetupState : ObservableObject, IDisplaySetupState
     }
 
     partial void OnIsDemoModeEnabledChanged(bool value)
+    {
+        SetupChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    partial void OnIsAnimationEnabledChanged(bool value)
     {
         SetupChanged?.Invoke(this, EventArgs.Empty);
     }

@@ -38,6 +38,9 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
     private IBrush? _wallpaperBrush;
 
     [ObservableProperty]
+    private bool _isAnimationEnabled = true;
+
+    [ObservableProperty]
     private string _statusText = "Checking display configuration...";
 
     [ObservableProperty]
@@ -82,6 +85,7 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
             _deviceType = _setupState.DeviceType;
             _laptopScreenSize = _setupState.LaptopScreenSize;
             _wallpaperBrush = _setupState.WallpaperBrush;
+            _isAnimationEnabled = _setupState.IsAnimationEnabled;
             _setupState.SetupChanged += OnSetupStateChanged;
         }
 
@@ -101,6 +105,7 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
             DeviceType = _setupState.DeviceType;
             LaptopScreenSize = _setupState.LaptopScreenSize;
             WallpaperBrush = _setupState.WallpaperBrush;
+            IsAnimationEnabled = _setupState.IsAnimationEnabled;
 
             if (_setupState.IsDemoModeEnabled)
             {
@@ -134,6 +139,14 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
         if (_setupState != null && _setupState.WallpaperBrush != value)
         {
             _setupState.WallpaperBrush = value;
+        }
+    }
+
+    partial void OnIsAnimationEnabledChanged(bool value)
+    {
+        if (_setupState != null && _setupState.IsAnimationEnabled != value)
+        {
+            _setupState.IsAnimationEnabled = value;
         }
     }
 

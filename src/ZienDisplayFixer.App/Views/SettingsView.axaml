@@ -3,15 +3,157 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:ZienDisplayFixer.App.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+             mc:Ignorable="d" d:DesignWidth="840" d:DesignHeight="600"
              x:Class="ZienDisplayFixer.App.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
-    <Grid Margin="32">
-        <Border Classes="Card" Padding="32" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <StackPanel Spacing="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Classes="PageTitle" Text="Settings" HorizontalAlignment="Center" />
-                <TextBlock Classes="Muted" Text="Application preferences, autostart, and auto-optimization on connect." HorizontalAlignment="Center" />
-            </StackPanel>
-        </Border>
-    </Grid>
+
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#CDB78F" />
+        <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#DFCDB0" />
+        <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="#BAA47B" />
+        <SolidColorBrush x:Key="ToggleSwitchStrokeOn" Color="#CDB78F" />
+        <SolidColorBrush x:Key="ToggleSwitchStrokeOnPointerOver" Color="#DFCDB0" />
+        <SolidColorBrush x:Key="ToggleSwitchStrokeOnPressed" Color="#BAA47B" />
+        <SolidColorBrush x:Key="ToggleSwitchKnobFillOn" Color="#0B0B0D" />
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="24" HorizontalAlignment="Stretch" MaxWidth="840">
+            <Border Classes="Card"
+                    Padding="32"
+                    HorizontalAlignment="Stretch">
+                <StackPanel Spacing="24">
+                    <!-- Header -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Settings"
+                                   FontSize="22"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AppText}" />
+                        <TextBlock Text="Application preferences, automation, and display stage appearance."
+                                   Classes="Muted"
+                                   FontSize="13" />
+                    </StackPanel>
+
+                    <!-- Settings List -->
+                    <StackPanel Spacing="12">
+                        <!-- 1. Fix automatically when a display connects -->
+                        <Border Background="#16161B"
+                                BorderBrush="{DynamicResource AppBorder}"
+                                BorderThickness="1"
+                                CornerRadius="16"
+                                Padding="20">
+                            <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,16,0">
+                                    <TextBlock Text="Fix automatically when a display connects"
+                                               FontWeight="SemiBold"
+                                               FontSize="15"
+                                               Foreground="{DynamicResource AppText}" />
+                                    <TextBlock Text="When a display connects, the app reads the info it sends (size, aspect ratio, native mode) and sets the best settings. Turn this off to apply them yourself with Fix my screens."
+                                               Classes="Muted"
+                                               FontSize="13"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1"
+                                              IsChecked="{Binding FixAutomaticallyOnConnect}"
+                                              OnContent=""
+                                              OffContent=""
+                                              VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
+
+                        <!-- 2. Start at login -->
+                        <Border Background="#16161B"
+                                BorderBrush="{DynamicResource AppBorder}"
+                                BorderThickness="1"
+                                CornerRadius="16"
+                                Padding="20">
+                            <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,16,0">
+                                    <TextBlock Text="Start at login"
+                                               FontWeight="SemiBold"
+                                               FontSize="15"
+                                               Foreground="{DynamicResource AppText}" />
+                                    <TextBlock Text="Automatically launch Zien Display Fixer in the background when you log in."
+                                               Classes="Muted"
+                                               FontSize="13"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1"
+                                              IsChecked="{Binding StartAtLogin}"
+                                              OnContent=""
+                                              OffContent=""
+                                              VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
+
+                        <!-- 3. Desk scene animation -->
+                        <Border Background="#16161B"
+                                BorderBrush="{DynamicResource AppBorder}"
+                                BorderThickness="1"
+                                CornerRadius="16"
+                                Padding="20">
+                            <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,16,0">
+                                    <TextBlock Text="Desk scene animation"
+                                               FontWeight="SemiBold"
+                                               FontSize="15"
+                                               Foreground="{DynamicResource AppText}" />
+                                    <TextBlock Text="Animate a soft light pulse traveling along connected display cables at 30 fps."
+                                               Classes="Muted"
+                                               FontSize="13"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1"
+                                              IsChecked="{Binding IsAnimationEnabled}"
+                                              OnContent=""
+                                              OffContent=""
+                                              VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
+
+                        <!-- 4. Demo mode -->
+                        <Border Background="#16161B"
+                                BorderBrush="{DynamicResource AppBorder}"
+                                BorderThickness="1"
+                                CornerRadius="16"
+                                Padding="20">
+                            <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,16,0">
+                                    <TextBlock Text="Demo mode"
+                                               FontWeight="SemiBold"
+                                               FontSize="15"
+                                               Foreground="{DynamicResource AppText}" />
+                                    <TextBlock Text="Enable preview mode to manually add, edit, and experiment with up to 8 virtual displays."
+                                               Classes="Muted"
+                                               FontSize="13"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1"
+                                              IsChecked="{Binding IsDemoModeEnabled}"
+                                              OnContent=""
+                                              OffContent=""
+                                              VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Auto-save hint footer -->
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="8"
+                                HorizontalAlignment="Center"
+                                Margin="0,8,0,0">
+                        <TextBlock Text="✓"
+                                   Foreground="{DynamicResource AppOk}"
+                                   FontWeight="Bold"
+                                   FontSize="12"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding StatusMessage, FallbackValue='Settings are saved automatically.'}"
+                                   Classes="Muted"
+                                   FontSize="13"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
 </UserControl>
