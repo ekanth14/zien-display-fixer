@@ -5,7 +5,11 @@ using ZienDisplayFixer.Core.Models;
 
 public class MacDisplayServiceStub : IDisplayService
 {
-    public event EventHandler? DisplaysChanged;
+    public event EventHandler? DisplaysChanged
+    {
+        add { }
+        remove { }
+    }
 
     public Task<IReadOnlyList<DisplayInfo>> GetDisplaysAsync(CancellationToken ct = default) =>
         throw new NotSupportedException("MacDisplayService is not yet implemented.");

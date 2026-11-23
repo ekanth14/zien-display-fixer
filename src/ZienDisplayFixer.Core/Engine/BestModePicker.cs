@@ -6,6 +6,7 @@ public static class BestModePicker
 {
     public static DisplayMode? PickBestMode(IEnumerable<DisplayMode>? availableModes, DisplayInfo display)
     {
+        ArgumentNullException.ThrowIfNull(display);
         if (availableModes == null)
             return null;
 

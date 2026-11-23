@@ -5,7 +5,11 @@ using ZienDisplayFixer.Core.Models;
 
 public class LinuxDisplayServiceStub : IDisplayService
 {
-    public event EventHandler? DisplaysChanged;
+    public event EventHandler? DisplaysChanged
+    {
+        add { }
+        remove { }
+    }
 
     public Task<IReadOnlyList<DisplayInfo>> GetDisplaysAsync(CancellationToken ct = default) =>
         throw new NotSupportedException("LinuxDisplayService is not yet implemented.");
