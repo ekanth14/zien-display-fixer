@@ -14,14 +14,17 @@ public static class ServiceRegistration
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             services.AddSingleton<IDisplayService, WindowsDisplayService>();
+            services.AddSingleton<IEdidReader, WindowsEdidReader>();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
             services.AddSingleton<IDisplayService, MacDisplayService>();
+            services.AddSingleton<IEdidReader, MacEdidReader>();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
             services.AddSingleton<IDisplayService, LinuxDisplayService>();
+            services.AddSingleton<IEdidReader, LinuxEdidReader>();
         }
         else
         {

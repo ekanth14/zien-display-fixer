@@ -211,7 +211,7 @@
 - Produces: `EdidParser.Parse(byte[] rawEdid) -> EdidData?`
 - Produces: `WindowsEdidReader`, `LinuxEdidReader`, `MacEdidReader` implementing `IEdidReader`
 
-- [ ] **Step 1: Write failing tests for `EdidParser`**
+- [x] **Step 1: Write failing tests for `EdidParser`**
   Provide synthetic and realistic 128-byte EDID byte arrays:
   - Header check (`00 FF FF FF FF FF FF 00`) & checksum modulo 256.
   - 3-letter compressed ASCII vendor decoding (e.g. `DEL` -> Dell).
@@ -219,22 +219,22 @@
   - Width and height (bytes 21, 22), diagonal inches calculation, aspect ratio snapping to nearest of (16:9, 16:10, 21:9, 32:9, 4:3, 5:4).
   - Preferred native mode from first Detailed Timing Descriptor.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
   Run: `dotnet test --filter FullyQualifiedName~EdidParserTests`
 
-- [ ] **Step 3: Implement `EdidParser` in pure C#**
+- [x] **Step 3: Implement `EdidParser` in pure C#**
   Implement header, checksum, vendor unpacking (`(byte1 & 0x7C) >> 2`, etc.), descriptor looping, and aspect ratio snapping.
 
-- [ ] **Step 4: Implement platform `IEdidReader` classes**
+- [x] **Step 4: Implement platform `IEdidReader` classes**
   - Windows: read from `HKLM\SYSTEM\CurrentControlSet\Enum\DISPLAY\...\Device Parameters\EDID`.
   - Linux: read binary bytes from `/sys/class/drm/*/edid`.
   - macOS: parse `IODisplayEDID` from `ioreg -l -w0 -r -c AppleDisplay`.
 
-- [ ] **Step 5: Run tests and verify**
+- [x] **Step 5: Run tests and verify**
   Run: `dotnet test --filter FullyQualifiedName~EdidParserTests`
   Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   ```bash
   git add src/ZienDisplayFixer.Core/Edid/ src/ZienDisplayFixer.App/Services/ tests/ZienDisplayFixer.Tests/Edid/
   git commit -m "feat: implement EdidParser with unit tests and OS-specific IEdidReader implementations"
