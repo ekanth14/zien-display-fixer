@@ -32,7 +32,10 @@ public class MacDisplayService : IDisplayService, IDisposable
             }
             catch
             {
-                // Graceful fallback if native registration fails
+                if (_reconfigCallbackHandle.IsAllocated)
+                {
+                    _reconfigCallbackHandle.Free();
+                }
             }
         }
     }
