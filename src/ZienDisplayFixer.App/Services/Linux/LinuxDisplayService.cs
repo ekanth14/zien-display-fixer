@@ -33,6 +33,7 @@ public class LinuxDisplayService : IDisplayService, IDisposable
     private readonly Dictionary<string, LinuxDisplaySnapshot> _previousModesSnapshot = new(StringComparer.OrdinalIgnoreCase);
     private readonly Timer? _pollTimer;
     private string _lastSignature = string.Empty;
+    private int _isPolling;
     private bool _isDisposed;
 
     public event EventHandler? DisplaysChanged;
@@ -56,6 +57,11 @@ public class LinuxDisplayService : IDisplayService, IDisposable
     {
         if (_isDisposed) return;
 
+        if (Interlocked.CompareExchange(ref _isPolling, 1, 0) != 0)
+        {
+            return;
+        }
+
         try
         {
             var displays = await GetDisplaysAsync().ConfigureAwait(false);
@@ -72,6 +78,10 @@ public class LinuxDisplayService : IDisplayService, IDisposable
         catch
         {
             // Polling errors should not crash the service
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _isPolling, 0);
         }
     }
 
@@ -115,15 +125,7 @@ public class LinuxDisplayService : IDisplayService, IDisposable
         }
 
         var session = DetectSessionType();
-        if (session == LinuxSessionType.X11 || CommandExists("xrandr"))
-        {
-            var (exitCode, stdout, _) = await RunProcessAsync("xrandr", "--query", ct).ConfigureAwait(false);
-            if (exitCode == 0)
-            {
-                return X11Parser.ParseXRandrQuery(stdout);
-            }
-        }
-        else if (session == LinuxSessionType.Wayland)
+        if (session == LinuxSessionType.Wayland)
         {
             var tool = DetectWaylandTool();
             if (tool == WaylandTool.WlrRandr)
@@ -134,13 +136,23 @@ public class LinuxDisplayService : IDisplayService, IDisposable
                     return ParseWlrRandrDisplays(stdout);
                 }
             }
-            else if (CommandExists("xrandr"))
+
+            // Fallback to xrandr on Wayland (via XWayland) if native tool is unavailable
+            if (CommandExists("xrandr"))
             {
                 var (exitCode, stdout, _) = await RunProcessAsync("xrandr", "--query", ct).ConfigureAwait(false);
                 if (exitCode == 0)
                 {
                     return X11Parser.ParseXRandrQuery(stdout);
                 }
+            }
+        }
+        else if (session == LinuxSessionType.X11 || CommandExists("xrandr"))
+        {
+            var (exitCode, stdout, _) = await RunProcessAsync("xrandr", "--query", ct).ConfigureAwait(false);
+            if (exitCode == 0)
+            {
+                return X11Parser.ParseXRandrQuery(stdout);
             }
         }
 
@@ -156,15 +168,7 @@ public class LinuxDisplayService : IDisplayService, IDisposable
         }
 
         var session = DetectSessionType();
-        if (session == LinuxSessionType.X11 || CommandExists("xrandr"))
-        {
-            var (exitCode, stdout, _) = await RunProcessAsync("xrandr", "--query", ct).ConfigureAwait(false);
-            if (exitCode == 0)
-            {
-                return X11Parser.ParseXRandrModes(stdout, displayId);
-            }
-        }
-        else if (session == LinuxSessionType.Wayland)
+        if (session == LinuxSessionType.Wayland)
         {
             var tool = DetectWaylandTool();
             if (tool == WaylandTool.WlrRandr)
@@ -175,13 +179,23 @@ public class LinuxDisplayService : IDisplayService, IDisposable
                     return ParseWlrRandrModes(stdout, displayId);
                 }
             }
-            else if (CommandExists("xrandr"))
+
+            // Fallback to xrandr on Wayland (via XWayland) if native tool is unavailable
+            if (CommandExists("xrandr"))
             {
                 var (exitCode, stdout, _) = await RunProcessAsync("xrandr", "--query", ct).ConfigureAwait(false);
                 if (exitCode == 0)
                 {
                     return X11Parser.ParseXRandrModes(stdout, displayId);
                 }
+            }
+        }
+        else if (session == LinuxSessionType.X11 || CommandExists("xrandr"))
+        {
+            var (exitCode, stdout, _) = await RunProcessAsync("xrandr", "--query", ct).ConfigureAwait(false);
+            if (exitCode == 0)
+            {
+                return X11Parser.ParseXRandrModes(stdout, displayId);
             }
         }
 
@@ -196,46 +210,50 @@ public class LinuxDisplayService : IDisplayService, IDisposable
         }
 
         var modes = await GetModesAsync(displayId, ct).ConfigureAwait(false);
-        return modes.Any(m => m.Width == mode.Width && m.Height == mode.Height && Math.Abs(m.RefreshHz - mode.RefreshHz) < 0.5);
+        return modes.Any(m => m.Width == mode.Width &&
+                              m.Height == mode.Height &&
+                              m.IsInterlaced == mode.IsInterlaced &&
+                              Math.Abs(m.RefreshHz - mode.RefreshHz) < 0.5);
     }
 
-    public async Task<bool> ApplyModeAsync(string displayId, DisplayMode mode, CancellationToken ct = default)
+    public Task<bool> ApplyModeAsync(string displayId, DisplayMode mode, CancellationToken ct = default)
+    {
+        return ApplyModeInternalAsync(displayId, mode, recordSnapshot: true, ct);
+    }
+
+    internal async Task<bool> ApplyModeInternalAsync(string displayId, DisplayMode mode, bool recordSnapshot, CancellationToken ct = default)
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || string.IsNullOrWhiteSpace(displayId) || mode == null)
         {
             return false;
         }
 
-        var currentDisplays = await GetDisplaysAsync(ct).ConfigureAwait(false);
-        if (currentDisplays.Count > 0)
+        if (recordSnapshot)
         {
-            lock (_snapshotLock)
+            var currentDisplays = await GetDisplaysAsync(ct).ConfigureAwait(false);
+            if (currentDisplays.Count > 0)
             {
-                _previousModesSnapshot.Clear();
-                foreach (var d in currentDisplays)
+                lock (_snapshotLock)
                 {
-                    if (d.CurrentMode != null)
+                    _previousModesSnapshot.Clear();
+                    foreach (var d in currentDisplays)
                     {
-                        _previousModesSnapshot[d.Id] = new LinuxDisplaySnapshot(
-                            d.Id,
-                            d.CurrentMode,
-                            d.PositionX,
-                            d.PositionY,
-                            d.IsPrimary);
+                        if (d.CurrentMode != null)
+                        {
+                            _previousModesSnapshot[d.Id] = new LinuxDisplaySnapshot(
+                                d.Id,
+                                d.CurrentMode,
+                                d.PositionX,
+                                d.PositionY,
+                                d.IsPrimary);
+                        }
                     }
                 }
             }
         }
 
         var session = DetectSessionType();
-        if (session == LinuxSessionType.X11 || CommandExists("xrandr"))
-        {
-            string rateStr = mode.RefreshHz.ToString("F2", CultureInfo.InvariantCulture);
-            string args = $"--output {displayId} --mode {mode.Width}x{mode.Height} --rate {rateStr}";
-            var (exitCode, _, _) = await RunProcessAsync("xrandr", args, ct).ConfigureAwait(false);
-            return exitCode == 0;
-        }
-        else if (session == LinuxSessionType.Wayland)
+        if (session == LinuxSessionType.Wayland)
         {
             var tool = DetectWaylandTool();
             switch (tool)
@@ -258,8 +276,23 @@ public class LinuxDisplayService : IDisplayService, IDisposable
                     return await ApplyGnomeMutterModeAsync(displayId, mode, ct).ConfigureAwait(false);
                 }
                 default:
+                    // Fallback to xrandr on Wayland if no native Wayland tool is detected
+                    if (CommandExists("xrandr"))
+                    {
+                        string rateStr = mode.RefreshHz.ToString("F2", CultureInfo.InvariantCulture);
+                        string args = $"--output {displayId} --mode {mode.Width}x{mode.Height} --rate {rateStr}";
+                        var (exitCode, _, _) = await RunProcessAsync("xrandr", args, ct).ConfigureAwait(false);
+                        return exitCode == 0;
+                    }
                     return false;
             }
+        }
+        else if (session == LinuxSessionType.X11 || CommandExists("xrandr"))
+        {
+            string rateStr = mode.RefreshHz.ToString("F2", CultureInfo.InvariantCulture);
+            string args = $"--output {displayId} --mode {mode.Width}x{mode.Height} --rate {rateStr}";
+            var (exitCode, _, _) = await RunProcessAsync("xrandr", args, ct).ConfigureAwait(false);
+            return exitCode == 0;
         }
 
         return false;
@@ -287,6 +320,20 @@ public class LinuxDisplayService : IDisplayService, IDisposable
 
         foreach (var snapshot in snapshots)
         {
+            if (session == LinuxSessionType.Wayland)
+            {
+                var tool = DetectWaylandTool();
+                if (tool != WaylandTool.None)
+                {
+                    bool res = await ApplyModeInternalAsync(snapshot.Id, snapshot.Mode, recordSnapshot: false, ct).ConfigureAwait(false);
+                    if (!res)
+                    {
+                        allSucceeded = false;
+                    }
+                    continue;
+                }
+            }
+
             if (session == LinuxSessionType.X11 || CommandExists("xrandr"))
             {
                 string rateStr = snapshot.Mode.RefreshHz.ToString("F2", CultureInfo.InvariantCulture);
@@ -299,7 +346,7 @@ public class LinuxDisplayService : IDisplayService, IDisposable
             }
             else
             {
-                bool res = await ApplyModeAsync(snapshot.Id, snapshot.Mode, ct).ConfigureAwait(false);
+                bool res = await ApplyModeInternalAsync(snapshot.Id, snapshot.Mode, recordSnapshot: false, ct).ConfigureAwait(false);
                 if (!res)
                 {
                     allSucceeded = false;
@@ -318,23 +365,11 @@ public class LinuxDisplayService : IDisplayService, IDisposable
         return allSucceeded;
     }
 
-    private static async Task<bool> ApplyGnomeMutterModeAsync(string displayId, DisplayMode mode, CancellationToken ct)
+    private static Task<bool> ApplyGnomeMutterModeAsync(string displayId, DisplayMode mode, CancellationToken ct)
     {
-        if (!CommandExists("gdbus"))
-        {
-            return false;
-        }
-
-        try
-        {
-            string args = $"call --session --dest org.gnome.Mutter.DisplayConfig --object-path /org/gnome/Mutter/DisplayConfig --method org.gnome.Mutter.DisplayConfig.GetCurrentState";
-            var (exitCode, _, _) = await RunProcessAsync("gdbus", args, ct).ConfigureAwait(false);
-            return exitCode == 0;
-        }
-        catch
-        {
-            return false;
-        }
+        // GNOME Mutter ApplyMonitorsConfig requires complex DBus variant structures with layout configuration.
+        // Returning false safely indicates Mutter mode changing is not currently applied via direct D-Bus call.
+        return Task.FromResult(false);
     }
 
     private static bool CheckGnomeMutterDBusAvailable()
@@ -359,7 +394,11 @@ public class LinuxDisplayService : IDisplayService, IDisposable
                 }
             };
             process.Start();
-            process.WaitForExit(1000);
+            if (!process.WaitForExit(1000))
+            {
+                try { process.Kill(); } catch { }
+                return false;
+            }
             return process.ExitCode == 0;
         }
         catch
@@ -385,7 +424,11 @@ public class LinuxDisplayService : IDisplayService, IDisposable
                 }
             };
             process.Start();
-            process.WaitForExit(1000);
+            if (!process.WaitForExit(1000))
+            {
+                try { process.Kill(); } catch { }
+                return false;
+            }
             return process.ExitCode == 0;
         }
         catch

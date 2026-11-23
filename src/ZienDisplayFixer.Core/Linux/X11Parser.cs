@@ -10,7 +10,7 @@ using ZienDisplayFixer.Core.Models;
 public static class X11Parser
 {
     private static readonly Regex DisplayHeaderRegex = new(
-        @"^(?<name>[A-Za-z0-9\-_]+)\s+connected\s*(?<primary>primary\s*)?(?:(?<w>\d+)x(?<h>\d+)\+(?<x>[+-]?\d+)\+(?<y>[+-]?\d+))?(?:[^\d\n\r]*(?:(?<physW>\d+)mm\s*x\s*(?<physH>\d+)mm)?)?",
+        @"^(?<name>[A-Za-z0-9\-_]+)\s+connected\s*(?<primary>primary\s*)?(?:(?<w>\d+)x(?<h>\d+)(?<x>[+-]\d+)(?<y>[+-]\d+))?(?:[^\d\n\r]*(?:(?<physW>\d+)mm\s*x\s*(?<physH>\d+)mm)?)?",
         RegexOptions.Compiled);
 
     private static readonly Regex ModeLineRegex = new(

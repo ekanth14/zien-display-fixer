@@ -147,6 +147,35 @@ public class X11ParserTests
         Assert.False(mode3.IsInterlaced);
     }
 
+    [Fact]
+    public void ParseXRandrQuery_NegativeCoordinates_ParsesPositionXAndPositionYCorrectly()
+    {
+        const string output = """
+            Screen 0: minimum 320 x 200, current 4480 x 1440, maximum 16384 x 16384
+            HDMI-1 connected 2560x1440-2560+0 (normal left inverted right x axis y axis) 597mm x 336mm
+               2560x1440     59.95*+
+            DP-1 connected 1920x1080+0-1080 (normal left inverted right x axis y axis) 500mm x 300mm
+               1920x1080     60.00*+
+            """;
+
+        var displays = X11Parser.ParseXRandrQuery(output);
+        Assert.Equal(2, displays.Count);
+
+        var hdmi = displays.First(d => d.Id == "HDMI-1");
+        Assert.Equal(-2560, hdmi.PositionX);
+        Assert.Equal(0, hdmi.PositionY);
+        Assert.NotNull(hdmi.CurrentMode);
+        Assert.Equal(2560, hdmi.CurrentMode.Width);
+        Assert.Equal(1440, hdmi.CurrentMode.Height);
+
+        var dp = displays.First(d => d.Id == "DP-1");
+        Assert.Equal(0, dp.PositionX);
+        Assert.Equal(-1080, dp.PositionY);
+        Assert.NotNull(dp.CurrentMode);
+        Assert.Equal(1920, dp.CurrentMode.Width);
+        Assert.Equal(1080, dp.CurrentMode.Height);
+    }
+
     [Theory]
     [InlineData("HDMI-1", ConnectionType.Hdmi)]
     [InlineData("HDMI-A-1", ConnectionType.Hdmi)]
