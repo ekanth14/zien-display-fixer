@@ -258,27 +258,27 @@
 - Produces: `MainViewModel` (CurrentPage, PageNavigationCommand, DisplaySummaryText)
 - Produces: Top bar wordmark, pill navigation, and page placeholders.
 
-- [ ] **Step 1: Create Theme Dictionaries**
+- [x] **Step 1: Create Theme Dictionaries**
   Define color palette resources for both Dark and Light variants:
   - Dark: Background `#0B0B0D`, Panel `#121215`, Border `#27272D`, Text `#F1EFEA`, Muted `#9A978F`, Accent `#CDB78F`, OK `#86B894`, Warning `#D4A35F`.
   - Light: Background `#F4F2ED`, Panel `#FFFFFF`, Border `#E1DDD3`, Text `#1B1A17`, Muted `#6B665B`, Accent `#8A6A3B`.
   Bundle Inter font and set up 24px border radii, 1px borders, and pill button styles.
 
-- [ ] **Step 2: Implement `MainViewModel`**
+- [x] **Step 2: Implement `MainViewModel`**
   Implement page routing properties: `CurrentPage` (Home, Displays, Wireless, Settings), `SelectedPageIndex`, and `DisplaySummaryText` ("N displays · M wireless").
 
-- [ ] **Step 3: Build `MainWindow.axaml`**
+- [x] **Step 3: Build `MainWindow.axaml`**
   Replicate HTML header:
   - Brand: "ZIEN" bold wordmark (300 weight, 0.42em spacing) + "Display Fixer" subtitle.
   - Centered navigation pill buttons (Home, Displays, Wireless, Settings) bound to `MainViewModel`.
   - Right-aligned summary text block.
   - ContentControl presenting `CurrentPage` using Avalonia `DataTemplates`.
 
-- [ ] **Step 4: Verify application launch**
+- [x] **Step 4: Verify application launch**
   Run: `dotnet run --project src/ZienDisplayFixer.App`
   Verify the window renders cleanly with the graphite/champagne theme and responsive navigation.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
   ```bash
   git add src/ZienDisplayFixer.App/
   git commit -m "feat: implement app shell, theme dictionaries, Inter typography, and page navigation"

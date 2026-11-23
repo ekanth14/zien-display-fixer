@@ -1,0 +1,116 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Card / Panel Style -->
+    <Style Selector="Border.Card, Border.Panel">
+        <Setter Property="CornerRadius" Value="24" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Background" Value="{DynamicResource AppPanel}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AppBorder}" />
+    </Style>
+
+    <!-- Pill Button Style -->
+    <Style Selector="Button.Pill">
+        <Setter Property="CornerRadius" Value="999" />
+        <Setter Property="MinHeight" Value="44" />
+        <Setter Property="Padding" Value="20,10" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AppBorder}" />
+        <Setter Property="Background" Value="{DynamicResource AppPanel}" />
+        <Setter Property="Foreground" Value="{DynamicResource AppText}" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.Pill:pointerover">
+        <Setter Property="Background" Value="{DynamicResource AppBorder}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AppBorder}" />
+    </Style>
+    <Style Selector="Button.Pill:pressed">
+        <Setter Property="Opacity" Value="0.85" />
+    </Style>
+
+    <!-- Action "Fix" Button Style -->
+    <Style Selector="Button.ActionFix">
+        <Setter Property="MinHeight" Value="54" />
+        <Setter Property="Padding" Value="48,0" />
+        <Setter Property="CornerRadius" Value="999" />
+        <Setter Property="Background" Value="{DynamicResource AppText}" />
+        <Setter Property="Foreground" Value="{DynamicResource AppBackground}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.ActionFix:pointerover">
+        <Setter Property="Opacity" Value="0.9" />
+    </Style>
+    <Style Selector="Button.ActionFix:pressed">
+        <Setter Property="Opacity" Value="0.75" />
+    </Style>
+
+    <!-- Segmented Button Groups -->
+    <Style Selector="Border.SegmentedGroup">
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="Background" Value="{DynamicResource AppPanel}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AppBorder}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="3" />
+    </Style>
+
+    <Style Selector="Button.SegmentedItem">
+        <Setter Property="CornerRadius" Value="9" />
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource AppMuted}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.SegmentedItem:pointerover">
+        <Setter Property="Foreground" Value="{DynamicResource AppText}" />
+    </Style>
+    <Style Selector="Button.SegmentedItem.Active">
+        <Setter Property="Background" Value="{DynamicResource AppBorder}" />
+        <Setter Property="Foreground" Value="{DynamicResource AppText}" />
+    </Style>
+
+    <!-- Top Navigation Pill Container & Buttons -->
+    <Style Selector="Border.NavContainer">
+        <Setter Property="CornerRadius" Value="999" />
+        <Setter Property="Background" Value="{DynamicResource AppPanel}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AppBorder}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="4" />
+    </Style>
+
+    <Style Selector="Button.NavPill">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource AppMuted}" />
+        <Setter Property="CornerRadius" Value="999" />
+        <Setter Property="Padding" Value="18,8" />
+        <Setter Property="MinHeight" Value="36" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.NavPill:pointerover">
+        <Setter Property="Foreground" Value="{DynamicResource AppText}" />
+        <Setter Property="Background" Value="#15888888" />
+    </Style>
+    <Style Selector="Button.NavPill.Active">
+        <Setter Property="Background" Value="{DynamicResource AppBorder}" />
+        <Setter Property="Foreground" Value="{DynamicResource AppText}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AppBorder}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+</Styles>

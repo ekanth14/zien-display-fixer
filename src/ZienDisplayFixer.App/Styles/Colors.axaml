@@ -1,0 +1,76 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Default">
+            <!-- Dark theme palette (Default) -->
+            <Color x:Key="AppBackgroundColor">#0B0B0D</Color>
+            <Color x:Key="AppPanelColor">#121215</Color>
+            <Color x:Key="AppBorderColor">#27272D</Color>
+            <Color x:Key="AppTextColor">#F1EFEA</Color>
+            <Color x:Key="AppMutedColor">#9A978F</Color>
+            <Color x:Key="AppAccentColor">#CDB78F</Color>
+            <Color x:Key="AppOkColor">#86B894</Color>
+            <Color x:Key="AppWarningColor">#D4A35F</Color>
+
+            <SolidColorBrush x:Key="AppBackground" Color="#0B0B0D" />
+            <SolidColorBrush x:Key="AppPanel" Color="#121215" />
+            <SolidColorBrush x:Key="AppBorder" Color="#27272D" />
+            <SolidColorBrush x:Key="AppText" Color="#F1EFEA" />
+            <SolidColorBrush x:Key="AppMuted" Color="#9A978F" />
+            <SolidColorBrush x:Key="AppAccent" Color="#CDB78F" />
+            <SolidColorBrush x:Key="AppOk" Color="#86B894" />
+            <SolidColorBrush x:Key="AppWarning" Color="#D4A35F" />
+
+            <SolidColorBrush x:Key="AppPanelHover" Color="#18181D" />
+            <SolidColorBrush x:Key="AppBorderSubtle" Color="#1C1C22" />
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Dark">
+            <!-- Dark theme palette -->
+            <Color x:Key="AppBackgroundColor">#0B0B0D</Color>
+            <Color x:Key="AppPanelColor">#121215</Color>
+            <Color x:Key="AppBorderColor">#27272D</Color>
+            <Color x:Key="AppTextColor">#F1EFEA</Color>
+            <Color x:Key="AppMutedColor">#9A978F</Color>
+            <Color x:Key="AppAccentColor">#CDB78F</Color>
+            <Color x:Key="AppOkColor">#86B894</Color>
+            <Color x:Key="AppWarningColor">#D4A35F</Color>
+
+            <SolidColorBrush x:Key="AppBackground" Color="#0B0B0D" />
+            <SolidColorBrush x:Key="AppPanel" Color="#121215" />
+            <SolidColorBrush x:Key="AppBorder" Color="#27272D" />
+            <SolidColorBrush x:Key="AppText" Color="#F1EFEA" />
+            <SolidColorBrush x:Key="AppMuted" Color="#9A978F" />
+            <SolidColorBrush x:Key="AppAccent" Color="#CDB78F" />
+            <SolidColorBrush x:Key="AppOk" Color="#86B894" />
+            <SolidColorBrush x:Key="AppWarning" Color="#D4A35F" />
+
+            <SolidColorBrush x:Key="AppPanelHover" Color="#18181D" />
+            <SolidColorBrush x:Key="AppBorderSubtle" Color="#1C1C22" />
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Light">
+            <!-- Light theme palette -->
+            <Color x:Key="AppBackgroundColor">#F4F2ED</Color>
+            <Color x:Key="AppPanelColor">#FFFFFF</Color>
+            <Color x:Key="AppBorderColor">#E1DDD3</Color>
+            <Color x:Key="AppTextColor">#1B1A17</Color>
+            <Color x:Key="AppMutedColor">#6B665B</Color>
+            <Color x:Key="AppAccentColor">#8A6A3B</Color>
+            <Color x:Key="AppOkColor">#3F7D52</Color>
+            <Color x:Key="AppWarningColor">#A8691A</Color>
+
+            <SolidColorBrush x:Key="AppBackground" Color="#F4F2ED" />
+            <SolidColorBrush x:Key="AppPanel" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="AppBorder" Color="#E1DDD3" />
+            <SolidColorBrush x:Key="AppText" Color="#1B1A17" />
+            <SolidColorBrush x:Key="AppMuted" Color="#6B665B" />
+            <SolidColorBrush x:Key="AppAccent" Color="#8A6A3B" />
+            <SolidColorBrush x:Key="AppOk" Color="#3F7D52" />
+            <SolidColorBrush x:Key="AppWarning" Color="#A8691A" />
+
+            <SolidColorBrush x:Key="AppPanelHover" Color="#F8F7F4" />
+            <SolidColorBrush x:Key="AppBorderSubtle" Color="#EAE7DF" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

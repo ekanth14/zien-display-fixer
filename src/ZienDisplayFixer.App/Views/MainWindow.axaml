@@ -2,8 +2,110 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:vm="using:ZienDisplayFixer.App.ViewModels"
+        xmlns:views="using:ZienDisplayFixer.App.Views"
+        xmlns:conv="using:ZienDisplayFixer.App.Converters"
+        mc:Ignorable="d" d:DesignWidth="1080" d:DesignHeight="720"
         x:Class="ZienDisplayFixer.App.Views.MainWindow"
-        Title="ZIEN Display Fixer">
-    <TextBlock Text="ZIEN Display Fixer" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        x:DataType="vm:MainViewModel"
+        Title="ZIEN Display Fixer"
+        Width="1080" Height="720"
+        MinWidth="900" MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource AppBackground}">
+
+    <Design.DataContext>
+        <vm:MainViewModel />
+    </Design.DataContext>
+
+    <Window.Resources>
+        <conv:EqualityToBooleanConverter x:Key="EqualConverter" />
+        <x:Int32 x:Key="PageHome">0</x:Int32>
+        <x:Int32 x:Key="PageDisplays">1</x:Int32>
+        <x:Int32 x:Key="PageWireless">2</x:Int32>
+        <x:Int32 x:Key="PageSettings">3</x:Int32>
+    </Window.Resources>
+
+    <Window.DataTemplates>
+        <DataTemplate DataType="{x:Type vm:HomeViewModel}">
+            <views:HomeView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DisplaysViewModel}">
+            <views:DisplaysView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:WirelessViewModel}">
+            <views:WirelessView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <views:SettingsView />
+        </DataTemplate>
+    </Window.DataTemplates>
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- Top Navigation Header -->
+        <Border Grid.Row="0"
+                Background="{DynamicResource AppBackground}"
+                BorderBrush="{DynamicResource AppBorder}"
+                BorderThickness="0,0,0,1"
+                Padding="28,14">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <!-- Left: Brand Wordmark -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="ZIEN" Classes="BrandWordmark" />
+                    <TextBlock Text="Display Fixer" Classes="BrandSubtitle" />
+                </StackPanel>
+
+                <!-- Center: Navigation Pill Tabs -->
+                <Border Grid.Column="1"
+                        Classes="NavContainer"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Button Classes="NavPill"
+                                Classes.Active="{Binding SelectedPageIndex, Converter={StaticResource EqualConverter}, ConverterParameter=0}"
+                                Command="{Binding NavigateCommand}"
+                                CommandParameter="{StaticResource PageHome}">
+                            <TextBlock Text="Home" />
+                        </Button>
+                        <Button Classes="NavPill"
+                                Classes.Active="{Binding SelectedPageIndex, Converter={StaticResource EqualConverter}, ConverterParameter=1}"
+                                Command="{Binding NavigateCommand}"
+                                CommandParameter="{StaticResource PageDisplays}">
+                            <TextBlock Text="Displays" />
+                        </Button>
+                        <Button Classes="NavPill"
+                                Classes.Active="{Binding SelectedPageIndex, Converter={StaticResource EqualConverter}, ConverterParameter=2}"
+                                Command="{Binding NavigateCommand}"
+                                CommandParameter="{StaticResource PageWireless}">
+                            <TextBlock Text="Wireless" />
+                        </Button>
+                        <Button Classes="NavPill"
+                                Classes.Active="{Binding SelectedPageIndex, Converter={StaticResource EqualConverter}, ConverterParameter=3}"
+                                Command="{Binding NavigateCommand}"
+                                CommandParameter="{StaticResource PageSettings}">
+                            <TextBlock Text="Settings" />
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- Right: Display Summary -->
+                <Border Grid.Column="2"
+                        Background="{DynamicResource AppPanel}"
+                        BorderBrush="{DynamicResource AppBorder}"
+                        BorderThickness="1"
+                        CornerRadius="999"
+                        Padding="16,6"
+                        VerticalAlignment="Center">
+                    <TextBlock Text="{Binding DisplaySummaryText}"
+                               Classes="SummaryBadge" />
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Main Content Area -->
+        <ContentControl Grid.Row="1"
+                        Content="{Binding CurrentPage}"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch" />
+    </Grid>
 </Window>

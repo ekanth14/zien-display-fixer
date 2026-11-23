@@ -1,0 +1,53 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Styles.Resources>
+        <FontFamily x:Key="AppFont">fonts:Inter#Inter, Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif</FontFamily>
+        <FontFamily x:Key="CodeFont">Cascadia Code, Consolas, Menlo, Monaco, monospace</FontFamily>
+    </Styles.Resources>
+
+    <!-- Typography Styles -->
+    <Style Selector="TextBlock.BrandWordmark">
+        <Setter Property="FontWeight" Value="Light" />
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="LetterSpacing" Value="0.42" />
+        <Setter Property="Foreground" Value="{DynamicResource AppText}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBlock.BrandSubtitle">
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{DynamicResource AppMuted}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBlock.PageTitle">
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource AppText}" />
+    </Style>
+
+    <Style Selector="TextBlock.SectionTitle">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource AppText}" />
+    </Style>
+
+    <Style Selector="TextBlock.Body">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Foreground" Value="{DynamicResource AppText}" />
+    </Style>
+
+    <Style Selector="TextBlock.Muted">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{DynamicResource AppMuted}" />
+    </Style>
+
+    <Style Selector="TextBlock.SummaryBadge">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Foreground" Value="{DynamicResource AppMuted}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+</Styles>

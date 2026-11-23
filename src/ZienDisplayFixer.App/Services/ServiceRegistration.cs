@@ -1,10 +1,12 @@
 namespace ZienDisplayFixer.App.Services;
 
+using System;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.DependencyInjection;
 using ZienDisplayFixer.App.Services.Linux;
 using ZienDisplayFixer.App.Services.MacOS;
 using ZienDisplayFixer.App.Services.Windows;
+using ZienDisplayFixer.App.ViewModels;
 using ZienDisplayFixer.Core.Interfaces;
 
 public static class ServiceRegistration
@@ -30,6 +32,13 @@ public static class ServiceRegistration
         {
             throw new PlatformNotSupportedException("Unsupported operating system.");
         }
+
+        // ViewModels
+        services.AddSingleton<HomeViewModel>();
+        services.AddSingleton<DisplaysViewModel>();
+        services.AddSingleton<WirelessViewModel>();
+        services.AddSingleton<SettingsViewModel>();
+        services.AddSingleton<MainViewModel>();
 
         return services;
     }
