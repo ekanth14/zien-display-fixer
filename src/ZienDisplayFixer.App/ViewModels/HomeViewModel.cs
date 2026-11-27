@@ -22,6 +22,7 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
     private readonly IEdidReader? _edidReader;
     private readonly IScreenModeService? _screenModeService;
     private readonly IDisplaySetupState? _setupState;
+    private readonly ISettingsService? _settingsService;
     private bool _isDisposed;
 
     public string Title => "Home";
@@ -73,12 +74,14 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
         IDisplayService? displayService,
         IEdidReader? edidReader,
         IScreenModeService? screenModeService,
-        IDisplaySetupState? setupState = null)
+        IDisplaySetupState? setupState = null,
+        ISettingsService? settingsService = null)
     {
         _displayService = displayService;
         _edidReader = edidReader;
         _screenModeService = screenModeService;
         _setupState = setupState;
+        _settingsService = settingsService;
 
         if (_setupState != null)
         {
@@ -94,8 +97,15 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
             _displayService.DisplaysChanged += OnDisplaysChanged;
         }
 
+        if (_settingsService != null)
+        {
+            _settingsService.SettingsChanged += OnSettingsChanged;
+        }
+
         _ = LoadDisplaysAsync();
     }
+
+    private void OnSettingsChanged(object? sender, AppSettings e) => OnDisplaysChanged(sender, EventArgs.Empty);
 
     private void OnSetupStateChanged(object? sender, EventArgs e)
     {
@@ -249,42 +259,14 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        int improvableCount = 0;
-        foreach (var display in displays)
-        {
-            bool isOptimal = false;
-            if (_displayService != null)
-            {
-                try
-                {
-                    var modes = await _displayService.GetModesAsync(display.Id, ct).ConfigureAwait(false);
-                    var best = BestModePicker.PickBestMode(modes, display);
-                    if (best != null && display.CurrentMode != null)
-                    {
-                        isOptimal = display.CurrentMode.Width == best.Width &&
-                                    display.CurrentMode.Height == best.Height &&
-                                    Math.Abs(display.CurrentMode.RefreshHz - best.RefreshHz) < 0.5;
-                    }
-                    else if (modes.Count == 0)
-                    {
-                        isOptimal = display.CurrentMode != null &&
-                                    !display.CurrentMode.IsInterlaced &&
-                                    display.CurrentMode.RefreshHz >= 59.0 &&
-                                    display.CurrentMode.Width >= 1280 &&
-                                    display.CurrentMode.Height >= 720;
-                    }
-                }
-                catch
-                {
-                    isOptimal = false;
-                }
-            }
+        var (plan, modesById) = await BuildFixPlanAsync(displays, ct).ConfigureAwait(false);
 
-            if (!isOptimal)
-            {
-                improvableCount++;
-            }
-        }
+        // Displays that expose no mode list can't be planned; judge them by their current mode instead.
+        int unlistedButPoor = displays.Count(d =>
+            modesById.GetValueOrDefault(d.Id)?.Count is null or 0 &&
+            !(d.CurrentMode is { IsInterlaced: false } m && m.RefreshHz >= 59.0 && m.Width >= 1280 && m.Height >= 720));
+        int improvableCount = plan.ModeChangeCount + unlistedButPoor;
+        bool onlyLayoutNeedsFixing = improvableCount == 0 && plan.HasChanges;
 
         RunOnUIThread(() =>
         {
@@ -298,6 +280,10 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
                 {
                     StatusText = $"{improvableCount} of {displays.Count} displays can be improved";
                 }
+            }
+            else if (onlyLayoutNeedsFixing)
+            {
+                StatusText = "Screen positions can be tidied up";
             }
             else
             {
@@ -327,55 +313,34 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
             ErrorMessage = null;
         });
 
+        var displays = Displays.ToList();
+
         try
         {
-            var modesToApply = new List<(DisplayInfo Display, DisplayMode TargetMode)>();
+            var (plan, _) = await BuildFixPlanAsync(displays, CancellationToken.None).ConfigureAwait(false);
 
-            foreach (var display in Displays)
-            {
-                var modes = await _displayService.GetModesAsync(display.Id).ConfigureAwait(false);
-                var best = BestModePicker.PickBestMode(modes, display);
-                if (best != null)
-                {
-                    bool needsUpdate = display.CurrentMode == null ||
-                                       display.CurrentMode.Width != best.Width ||
-                                       display.CurrentMode.Height != best.Height ||
-                                       Math.Abs(display.CurrentMode.RefreshHz - best.RefreshHz) >= 0.5;
-
-                    if (needsUpdate)
-                    {
-                        modesToApply.Add((display, best));
-                    }
-                }
-            }
-
-            if (modesToApply.Count == 0)
+            if (!plan.HasChanges)
             {
                 RunOnUIThread(() => StatusText = "All displays are at their best settings");
                 return;
             }
 
-            // Test mode for each display first
-            foreach (var (display, targetMode) in modesToApply)
+            foreach (var target in plan.ModeChanges)
             {
-                bool testPassed = await _displayService.TestModeAsync(display.Id, targetMode).ConfigureAwait(false);
+                bool testPassed = await _displayService.TestModeAsync(target.DisplayId, target.Mode).ConfigureAwait(false);
                 if (!testPassed)
                 {
-                    RunOnUIThread(() => ErrorMessage = $"Mode {targetMode.Width}x{targetMode.Height} rejected by display driver.");
+                    RunOnUIThread(() => ErrorMessage = $"Mode {target.Mode.Width}x{target.Mode.Height} rejected by display driver.");
                     return;
                 }
             }
 
-            // Apply all tested modes in batch
-            foreach (var (display, targetMode) in modesToApply)
+            bool applied = await _displayService.ApplyConfigurationAsync(plan.Targets).ConfigureAwait(false);
+            if (!applied)
             {
-                bool applied = await _displayService.ApplyModeAsync(display.Id, targetMode).ConfigureAwait(false);
-                if (!applied)
-                {
-                    RunOnUIThread(() => ErrorMessage = $"Failed to apply mode {targetMode.Width}x{targetMode.Height} to display.");
-                    _ = RevertPreviousModesAsync();
-                    return;
-                }
+                RunOnUIThread(() => ErrorMessage = "The new display settings could not be applied, so your previous setup is being restored.");
+                _ = RevertPreviousModesAsync();
+                return;
             }
 
             // Launch 12-second fail-safe confirmation
@@ -410,6 +375,30 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
         {
             RunOnUIThread(() => IsFixing = false);
         }
+    }
+
+    private async Task<(DisplayFixPlan Plan, Dictionary<string, IReadOnlyList<DisplayMode>> ModesById)> BuildFixPlanAsync(
+        IReadOnlyList<DisplayInfo> displays,
+        CancellationToken ct)
+    {
+        var modesById = new Dictionary<string, IReadOnlyList<DisplayMode>>(StringComparer.OrdinalIgnoreCase);
+        if (_displayService != null)
+        {
+            foreach (var display in displays)
+            {
+                try
+                {
+                    modesById[display.Id] = await _displayService.GetModesAsync(display.Id, ct).ConfigureAwait(false);
+                }
+                catch
+                {
+                    modesById[display.Id] = [];
+                }
+            }
+        }
+
+        var plan = DisplayFixPlanner.Plan(displays, modesById, _settingsService?.CurrentSettings.DisplayPlacements);
+        return (plan, modesById);
     }
 
     private async Task RevertPreviousModesAsync()
@@ -489,6 +478,10 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
             if (_displayService != null)
             {
                 _displayService.DisplaysChanged -= OnDisplaysChanged;
+            }
+            if (_settingsService != null)
+            {
+                _settingsService.SettingsChanged -= OnSettingsChanged;
             }
             Confirmation?.StopTimer();
         }

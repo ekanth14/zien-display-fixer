@@ -5,6 +5,7 @@ public record DisplayInfo
     public string Id { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
     public string Model { get; init; } = string.Empty;
+    public string HardwareId { get; init; } = string.Empty;
     public bool IsPrimary { get; init; }
     public int PositionX { get; init; }
     public int PositionY { get; init; }

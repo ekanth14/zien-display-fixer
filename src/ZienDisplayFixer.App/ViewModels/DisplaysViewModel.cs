@@ -26,6 +26,7 @@ public partial class DisplaysViewModel : ViewModelBase
     private readonly IWallpaperService? _wallpaperService;
     private readonly IDisplayService? _displayService;
     private readonly IEdidReader? _edidReader;
+    private readonly ISettingsService? _settingsService;
     private bool _isSyncing;
 
     public string Title => "Displays";
@@ -69,12 +70,14 @@ public partial class DisplaysViewModel : ViewModelBase
         IDisplaySetupState? setupState,
         IWallpaperService? wallpaperService = null,
         IDisplayService? displayService = null,
-        IEdidReader? edidReader = null)
+        IEdidReader? edidReader = null,
+        ISettingsService? settingsService = null)
     {
         _setupState = setupState;
         _wallpaperService = wallpaperService;
         _displayService = displayService;
         _edidReader = edidReader;
+        _settingsService = settingsService;
 
         if (_setupState != null)
         {
@@ -170,12 +173,23 @@ public partial class DisplaysViewModel : ViewModelBase
         _isSyncing = true;
         try
         {
+            foreach (var old in DisplayItems)
+            {
+                old.PropertyChanged -= OnDisplayItemPropertyChanged;
+            }
             DisplayItems.Clear();
             int idx = DeviceType == DeviceType.Laptop ? 2 : 1;
             foreach (var d in _setupState.Displays)
             {
                 int currentIdx = d.IsPrimary && DeviceType == DeviceType.Laptop ? 1 : idx++;
                 var item = DisplayItemViewModel.FromDisplayInfo(d, displayIndex: currentIdx);
+                if (_settingsService != null &&
+                    !string.IsNullOrEmpty(item.HardwareId) &&
+                    _settingsService.CurrentSettings.DisplayPlacements.TryGetValue(item.HardwareId, out var saved))
+                {
+                    item.Placement = saved;
+                }
+                item.PropertyChanged += OnDisplayItemPropertyChanged;
                 DisplayItems.Add(item);
             }
             OnPropertyChanged(nameof(HasDisplays));
@@ -184,6 +198,28 @@ public partial class DisplaysViewModel : ViewModelBase
         {
             _isSyncing = false;
         }
+    }
+
+    private void OnDisplayItemPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(DisplayItemViewModel.Placement) ||
+            sender is not DisplayItemViewModel item ||
+            _settingsService == null ||
+            string.IsNullOrEmpty(item.HardwareId))
+        {
+            return;
+        }
+
+        var settings = _settingsService.CurrentSettings;
+        if (item.Placement == DisplayPlacement.Auto)
+        {
+            settings.DisplayPlacements.Remove(item.HardwareId);
+        }
+        else
+        {
+            settings.DisplayPlacements[item.HardwareId] = item.Placement;
+        }
+        _ = _settingsService.SaveSettingsAsync(settings);
     }
 
     [RelayCommand]

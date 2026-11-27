@@ -185,6 +185,7 @@ public partial class SettingsViewModel : ViewModelBase
     {
         var updated = new AppSettings
         {
+            DisplayPlacements = _settingsService?.CurrentSettings.DisplayPlacements ?? new(),
             FixAutomaticallyOnConnect = FixAutomaticallyOnConnect,
             StartAtLogin = StartAtLogin,
             IsAnimationEnabled = IsAnimationEnabled

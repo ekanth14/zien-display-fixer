@@ -284,6 +284,26 @@
                                                            FontSize="13" />
                                             </StackPanel>
                                         </Grid>
+
+                                        <!-- Physical placement relative to the primary display -->
+                                        <Grid ColumnDefinitions="*,Auto"
+                                              IsVisible="{Binding CanChangePlacement}">
+                                            <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                                <TextBlock Text="Position on your desk"
+                                                           Foreground="{DynamicResource AppText}"
+                                                           FontWeight="SemiBold"
+                                                           FontSize="13" />
+                                                <TextBlock Text="Where this screen sits relative to your main screen. Fix my screens will line it up."
+                                                           Classes="Muted"
+                                                           FontSize="11"
+                                                           TextWrapping="Wrap" />
+                                            </StackPanel>
+                                            <ComboBox Grid.Column="1"
+                                                      MinWidth="130"
+                                                      VerticalAlignment="Center"
+                                                      ItemsSource="{x:Static vm:DisplayItemViewModel.PlacementOptions}"
+                                                      SelectedItem="{Binding Placement, Mode=TwoWay}" />
+                                        </Grid>
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>

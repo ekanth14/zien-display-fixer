@@ -58,6 +58,7 @@ public class WindowsDisplayService : IDisplayService, IDisposable
                 bool isPrimary = (adapterDevice.StateFlags & User32.DISPLAY_DEVICE_PRIMARY_DEVICE) != 0;
                 string deviceName = adapterDevice.DeviceName;
                 string modelName = adapterDevice.DeviceString;
+                string hardwareId = string.Empty;
 
                 var monitorDevice = new DISPLAY_DEVICEW();
                 monitorDevice.cb = (uint)Marshal.SizeOf<DISPLAY_DEVICEW>();
@@ -67,6 +68,7 @@ public class WindowsDisplayService : IDisplayService, IDisposable
                     {
                         modelName = monitorDevice.DeviceString;
                     }
+                    hardwareId = ParseHardwareId(monitorDevice.DeviceID);
                 }
 
                 var devMode = new DEVMODEW();
@@ -99,7 +101,10 @@ public class WindowsDisplayService : IDisplayService, IDisposable
                     physicalWidthMm: 0,
                     physicalHeightMm: 0,
                     connection: ConnectionType.Unknown
-                );
+                )
+                {
+                    HardwareId = hardwareId
+                };
 
                 displays.Add(info);
             }
@@ -228,6 +233,75 @@ public class WindowsDisplayService : IDisplayService, IDisposable
 
         int commitRes = User32.ChangeDisplaySettingsEx(null, IntPtr.Zero, IntPtr.Zero, 0, IntPtr.Zero);
         return commitRes == User32.DISP_CHANGE_SUCCESSFUL;
+    }
+
+    public async Task<bool> ApplyConfigurationAsync(IReadOnlyList<DisplayTarget> targets, CancellationToken ct = default)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || targets.Count == 0)
+        {
+            return false;
+        }
+
+        var displays = await GetDisplaysAsync(ct).ConfigureAwait(false);
+        if (displays.Count == 0)
+        {
+            return false;
+        }
+
+        lock (_snapshotLock)
+        {
+            _previousModesSnapshot.Clear();
+            foreach (var d in displays)
+            {
+                if (d.CurrentMode != null)
+                {
+                    _previousModesSnapshot[d.Id] = new DisplaySnapshot(d.Id, d.CurrentMode, d.PositionX, d.PositionY, d.IsPrimary);
+                }
+            }
+        }
+
+        // Every display gets its mode and position staged in the registry, then one commit applies them together,
+        // so Windows never sees a half-applied layout with gaps it would "fix" on its own.
+        foreach (var target in targets)
+        {
+            var devMode = new DEVMODEW();
+            devMode.dmSize = (ushort)Marshal.SizeOf<DEVMODEW>();
+            devMode.dmPelsWidth = (uint)target.Mode.Width;
+            devMode.dmPelsHeight = (uint)target.Mode.Height;
+            devMode.dmDisplayFrequency = (uint)Math.Round(target.Mode.RefreshHz);
+            devMode.dmPositionX = target.PositionX;
+            devMode.dmPositionY = target.PositionY;
+            devMode.dmFields = User32.DM_PELSWIDTH | User32.DM_PELSHEIGHT | User32.DM_DISPLAYFREQUENCY | User32.DM_POSITION | User32.DM_DISPLAYFLAGS;
+            devMode.dmDisplayFlags = target.Mode.IsInterlaced ? User32.DM_INTERLACED : 0;
+
+            uint flags = User32.CDS_UPDATEREGISTRY | User32.CDS_NORESET;
+            if (target.IsPrimary)
+            {
+                flags |= User32.CDS_SET_PRIMARY;
+            }
+
+            int res = User32.ChangeDisplaySettingsEx(target.DisplayId, ref devMode, IntPtr.Zero, flags, IntPtr.Zero);
+            if (res != User32.DISP_CHANGE_SUCCESSFUL)
+            {
+                await RestorePreviousModesAsync(ct).ConfigureAwait(false);
+                return false;
+            }
+        }
+
+        int commitRes = User32.ChangeDisplaySettingsEx(null, IntPtr.Zero, IntPtr.Zero, 0, IntPtr.Zero);
+        return commitRes == User32.DISP_CHANGE_SUCCESSFUL;
+    }
+
+    public static string ParseHardwareId(string? monitorDeviceId)
+    {
+        // "MONITOR\HEC0030\{4d36e96e-...}\0006" -> "HEC0030"
+        if (string.IsNullOrWhiteSpace(monitorDeviceId))
+        {
+            return string.Empty;
+        }
+
+        var parts = monitorDeviceId.Split('\\', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length >= 2 ? parts[1] : string.Empty;
     }
 
     public Task<bool> RestorePreviousModesAsync(CancellationToken ct = default)

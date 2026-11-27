@@ -53,6 +53,15 @@ public partial class DisplayItemViewModel : ObservableObject
         _ => "Internal / Direct"
     };
 
+    public static IReadOnlyList<DisplayPlacement> PlacementOptions { get; } = Enum.GetValues<DisplayPlacement>();
+
+    [ObservableProperty]
+    private DisplayPlacement _placement = DisplayPlacement.Auto;
+
+    public string HardwareId { get; set; } = string.Empty;
+
+    public bool CanChangePlacement => !IsPrimary && !string.IsNullOrEmpty(HardwareId);
+
     public bool IsPrimary { get; set; }
     public int PositionX { get; set; }
     public int PositionY { get; set; }
@@ -124,7 +133,10 @@ public partial class DisplayItemViewModel : ObservableObject
             currentMode: CurrentMode ?? new DisplayMode(1920, 1080, 60.0, false),
             physicalWidthMm: wMm,
             physicalHeightMm: hMm,
-            connection: Connection);
+            connection: Connection)
+        {
+            HardwareId = HardwareId
+        };
     }
 
     public static DisplayItemViewModel FromDisplayInfo(
@@ -155,6 +167,7 @@ public partial class DisplayItemViewModel : ObservableObject
             Connection = info.Connection != ConnectionType.Unknown ? info.Connection : ConnectionType.Hdmi,
             NativeModeText = nativeText,
             CurrentMode = info.CurrentMode,
+            HardwareId = info.HardwareId,
             IsPrimary = info.IsPrimary,
             PositionX = info.PositionX,
             PositionY = info.PositionY

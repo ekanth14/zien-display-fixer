@@ -123,39 +123,22 @@ public class DisplayHotPlugMonitor : IDisposable
             var rawDisplays = await _displayService.GetDisplaysAsync(ct).ConfigureAwait(false);
             if (rawDisplays.Count == 0) return;
 
-            var modesToApply = new List<(string DisplayId, DisplayMode BestMode)>();
-
+            var modesById = new Dictionary<string, IReadOnlyList<DisplayMode>>(StringComparer.OrdinalIgnoreCase);
             foreach (var display in rawDisplays)
             {
-                var modes = await _displayService.GetModesAsync(display.Id, ct).ConfigureAwait(false);
-                var best = BestModePicker.PickBestMode(modes, display);
-                if (best != null)
-                {
-                    bool needsUpdate = display.CurrentMode == null ||
-                                       display.CurrentMode.Width != best.Width ||
-                                       display.CurrentMode.Height != best.Height ||
-                                       Math.Abs(display.CurrentMode.RefreshHz - best.RefreshHz) >= 0.5;
-
-                    if (needsUpdate)
-                    {
-                        modesToApply.Add((display.Id, best));
-                    }
-                }
+                modesById[display.Id] = await _displayService.GetModesAsync(display.Id, ct).ConfigureAwait(false);
             }
 
-            if (modesToApply.Count == 0) return;
+            var plan = DisplayFixPlanner.Plan(rawDisplays, modesById, _settingsService.CurrentSettings.DisplayPlacements);
+            if (!plan.HasChanges) return;
 
-            foreach (var (displayId, targetMode) in modesToApply)
+            foreach (var target in plan.ModeChanges)
             {
-                bool testPassed = await _displayService.TestModeAsync(displayId, targetMode, ct).ConfigureAwait(false);
+                bool testPassed = await _displayService.TestModeAsync(target.DisplayId, target.Mode, ct).ConfigureAwait(false);
                 if (!testPassed) return;
             }
 
-            foreach (var (displayId, targetMode) in modesToApply)
-            {
-                bool applied = await _displayService.ApplyModeAsync(displayId, targetMode, ct).ConfigureAwait(false);
-                if (!applied) return;
-            }
+            if (!await _displayService.ApplyConfigurationAsync(plan.Targets, ct).ConfigureAwait(false)) return;
 
             AutoFixCompleted?.Invoke(this, EventArgs.Empty);
         }

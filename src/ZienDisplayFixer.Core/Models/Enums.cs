@@ -17,6 +17,15 @@ public enum DeviceType
     Pc
 }
 
+public enum DisplayPlacement
+{
+    Auto,
+    Left,
+    Right,
+    Above,
+    Below
+}
+
 public enum ScreenTopology
 {
     Extend,
