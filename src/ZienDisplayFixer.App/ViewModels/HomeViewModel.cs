@@ -143,7 +143,13 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
 
     private void OnDisplaysChanged(object? sender, EventArgs e)
     {
-        RunOnUIThread(() => _ = LoadDisplaysAsync());
+        RunOnUIThread(() =>
+        {
+            if (!IsConfirmationVisible && !IsFixing)
+            {
+                _ = LoadDisplaysAsync();
+            }
+        });
     }
 
     public async Task LoadDisplaysAsync(CancellationToken ct = default)
@@ -363,7 +369,13 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
             // Apply all tested modes in batch
             foreach (var (display, targetMode) in modesToApply)
             {
-                await _displayService.ApplyModeAsync(display.Id, targetMode).ConfigureAwait(false);
+                bool applied = await _displayService.ApplyModeAsync(display.Id, targetMode).ConfigureAwait(false);
+                if (!applied)
+                {
+                    RunOnUIThread(() => ErrorMessage = $"Failed to apply mode {targetMode.Width}x{targetMode.Height} to display.");
+                    _ = RevertPreviousModesAsync();
+                    return;
+                }
             }
 
             // Launch 12-second fail-safe confirmation

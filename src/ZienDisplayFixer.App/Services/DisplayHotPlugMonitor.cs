@@ -97,13 +97,22 @@ public class DisplayHotPlugMonitor : IDisposable
 
         if (_homeViewModel != null)
         {
-            RunOnUIThread(() =>
+            _isInternalFixing = true;
+            try
             {
-                if (_homeViewModel.CanFixScreens)
+                await RunOnUIThreadAsync(async () =>
                 {
-                    _ = _homeViewModel.FixScreensAsync();
-                }
-            });
+                    if (_homeViewModel.CanFixScreens)
+                    {
+                        await _homeViewModel.FixScreensAsync().ConfigureAwait(true);
+                    }
+                }).ConfigureAwait(false);
+            }
+            finally
+            {
+                _isInternalFixing = false;
+            }
+
             AutoFixCompleted?.Invoke(this, EventArgs.Empty);
             return;
         }
@@ -144,7 +153,8 @@ public class DisplayHotPlugMonitor : IDisposable
 
             foreach (var (displayId, targetMode) in modesToApply)
             {
-                await _displayService.ApplyModeAsync(displayId, targetMode, ct).ConfigureAwait(false);
+                bool applied = await _displayService.ApplyModeAsync(displayId, targetMode, ct).ConfigureAwait(false);
+                if (!applied) return;
             }
 
             AutoFixCompleted?.Invoke(this, EventArgs.Empty);
@@ -155,14 +165,26 @@ public class DisplayHotPlugMonitor : IDisposable
         }
     }
 
-    private static void RunOnUIThread(Action action)
+    private static Task RunOnUIThreadAsync(Func<Task> action)
     {
         try
         {
             if (Avalonia.Application.Current != null && Dispatcher.UIThread is { } dispatcher && !dispatcher.CheckAccess())
             {
-                dispatcher.Post(action);
-                return;
+                var tcs = new TaskCompletionSource();
+                dispatcher.Post(async () =>
+                {
+                    try
+                    {
+                        await action().ConfigureAwait(true);
+                        tcs.TrySetResult();
+                    }
+                    catch (Exception ex)
+                    {
+                        tcs.TrySetException(ex);
+                    }
+                });
+                return tcs.Task;
             }
         }
         catch
@@ -170,7 +192,7 @@ public class DisplayHotPlugMonitor : IDisposable
             // Headless / unit testing fallback
         }
 
-        action();
+        return action();
     }
 
     public void Dispose()
