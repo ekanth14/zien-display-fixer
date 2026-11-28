@@ -2,6 +2,8 @@ namespace ZienDisplayFixer.Core.Engine;
 
 using ZienDisplayFixer.Core.Models;
 
+// Width/Height are the size the display will have after the fix; CurrentWidth/CurrentHeight are its size
+// right now (0 = unchanged). Where a display sits today must be judged from its current rectangle.
 public sealed record ArrangeInput(
     string Id,
     int Width,
@@ -9,7 +11,13 @@ public sealed record ArrangeInput(
     bool IsPrimary,
     int CurrentX,
     int CurrentY,
-    DisplayPlacement Placement = DisplayPlacement.Auto);
+    DisplayPlacement Placement = DisplayPlacement.Auto,
+    int CurrentWidth = 0,
+    int CurrentHeight = 0)
+{
+    public int NowWidth => CurrentWidth > 0 ? CurrentWidth : Width;
+    public int NowHeight => CurrentHeight > 0 ? CurrentHeight : Height;
+}
 
 public static class DisplayArranger
 {
@@ -67,16 +75,16 @@ public static class DisplayArranger
     public static DisplayPlacement InferPlacement(ArrangeInput display, ArrangeInput primary)
     {
         int pLeft = primary.CurrentX, pTop = primary.CurrentY;
-        int pRight = pLeft + primary.Width, pBottom = pTop + primary.Height;
+        int pRight = pLeft + primary.NowWidth, pBottom = pTop + primary.NowHeight;
         int dLeft = display.CurrentX, dTop = display.CurrentY;
-        int dRight = dLeft + display.Width, dBottom = dTop + display.Height;
+        int dRight = dLeft + display.NowWidth, dBottom = dTop + display.NowHeight;
 
         bool overlapsHorizontally = dLeft < pRight && dRight > pLeft;
         if (overlapsHorizontally && dBottom <= pTop) return DisplayPlacement.Above;
         if (overlapsHorizontally && dTop >= pBottom) return DisplayPlacement.Below;
 
-        double displayCenter = dLeft + display.Width / 2.0;
-        double primaryCenter = pLeft + primary.Width / 2.0;
+        double displayCenter = dLeft + display.NowWidth / 2.0;
+        double primaryCenter = pLeft + primary.NowWidth / 2.0;
         return displayCenter < primaryCenter ? DisplayPlacement.Left : DisplayPlacement.Right;
     }
 
@@ -135,15 +143,15 @@ public static class DisplayArranger
     }
 
     private static bool Overlaps(ArrangeInput a, ArrangeInput b) =>
-        a.CurrentX < b.CurrentX + b.Width && a.CurrentX + a.Width > b.CurrentX &&
-        a.CurrentY < b.CurrentY + b.Height && a.CurrentY + a.Height > b.CurrentY;
+        a.CurrentX < b.CurrentX + b.NowWidth && a.CurrentX + a.NowWidth > b.CurrentX &&
+        a.CurrentY < b.CurrentY + b.NowHeight && a.CurrentY + a.NowHeight > b.CurrentY;
 
     private static bool Touches(ArrangeInput a, ArrangeInput b)
     {
-        bool verticalSpansOverlap = a.CurrentY < b.CurrentY + b.Height && a.CurrentY + a.Height > b.CurrentY;
-        bool horizontalSpansOverlap = a.CurrentX < b.CurrentX + b.Width && a.CurrentX + a.Width > b.CurrentX;
-        bool sideBySide = a.CurrentX + a.Width == b.CurrentX || b.CurrentX + b.Width == a.CurrentX;
-        bool stacked = a.CurrentY + a.Height == b.CurrentY || b.CurrentY + b.Height == a.CurrentY;
+        bool verticalSpansOverlap = a.CurrentY < b.CurrentY + b.NowHeight && a.CurrentY + a.NowHeight > b.CurrentY;
+        bool horizontalSpansOverlap = a.CurrentX < b.CurrentX + b.NowWidth && a.CurrentX + a.NowWidth > b.CurrentX;
+        bool sideBySide = a.CurrentX + a.NowWidth == b.CurrentX || b.CurrentX + b.NowWidth == a.CurrentX;
+        bool stacked = a.CurrentY + a.NowHeight == b.CurrentY || b.CurrentY + b.NowHeight == a.CurrentY;
         return (sideBySide && verticalSpansOverlap) || (stacked && horizontalSpansOverlap);
     }
 }

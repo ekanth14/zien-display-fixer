@@ -41,7 +41,9 @@ public static class DisplayFixPlanner
                 p.Display.IsPrimary,
                 p.Display.PositionX,
                 p.Display.PositionY,
-                placements.GetValueOrDefault(p.Display.Id, DisplayPlacement.Auto)))
+                placements.GetValueOrDefault(p.Display.Id, DisplayPlacement.Auto),
+                p.Display.CurrentMode?.Width ?? 0,
+                p.Display.CurrentMode?.Height ?? 0))
             .ToList();
 
         bool rearrange = planned.Any(p => p.ModeChanged)

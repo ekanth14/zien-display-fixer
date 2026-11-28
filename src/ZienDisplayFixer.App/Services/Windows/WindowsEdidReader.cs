@@ -23,6 +23,12 @@ public class WindowsEdidReader : IEdidReader
 
         try
         {
+            if (displayId.StartsWith(@"\\.\", StringComparison.OrdinalIgnoreCase) &&
+                WindowsMonitorEdid.ReadForAdapter(displayId) is { } attachedEdid)
+            {
+                return Task.FromResult<byte[]?>(attachedEdid);
+            }
+
             var edids = ReadAllEdidsInternal();
 
             if (edids.TryGetValue(displayId, out var exactMatch))

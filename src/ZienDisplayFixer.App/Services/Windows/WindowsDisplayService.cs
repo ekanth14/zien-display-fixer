@@ -3,6 +3,7 @@ namespace ZienDisplayFixer.App.Services.Windows;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using ZienDisplayFixer.App.Services.Windows.Native;
+using ZienDisplayFixer.Core.Edid;
 using ZienDisplayFixer.Core.Interfaces;
 using ZienDisplayFixer.Core.Models;
 
@@ -90,6 +91,12 @@ public class WindowsDisplayService : IDisplayService, IDisposable
                     );
                 }
 
+                var edid = EdidParser.Parse(WindowsMonitorEdid.ReadForAdapter(deviceName));
+                if (!string.IsNullOrWhiteSpace(edid?.ModelName))
+                {
+                    modelName = edid.ModelName;
+                }
+
                 var info = new DisplayInfo(
                     id: deviceName,
                     name: !string.IsNullOrWhiteSpace(modelName) ? modelName : deviceName,
@@ -98,12 +105,13 @@ public class WindowsDisplayService : IDisplayService, IDisposable
                     positionX: posX,
                     positionY: posY,
                     currentMode: currentMode,
-                    physicalWidthMm: 0,
-                    physicalHeightMm: 0,
+                    physicalWidthMm: (edid?.PhysicalWidthCm ?? 0) * 10,
+                    physicalHeightMm: (edid?.PhysicalHeightCm ?? 0) * 10,
                     connection: ConnectionType.Unknown
                 )
                 {
-                    HardwareId = hardwareId
+                    HardwareId = hardwareId,
+                    NativeMode = edid?.PreferredMode
                 };
 
                 displays.Add(info);

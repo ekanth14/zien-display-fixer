@@ -24,11 +24,33 @@ public static class BestModePicker
             candidates = candidates.Where(m => m.Width <= 1920 && m.Height <= 1080 && m.RefreshHz <= 60.01).ToList();
         }
 
+        // Adapters and TVs advertise modes the panel can't show (a VGA adapter offering 1080p to a 1366x768
+        // monitor gives "Input not supported"), so never go above the monitor's own native resolution.
+        var native = display.NativeMode is { Width: > 0, Height: > 0 } n ? n : null;
+        if (native != null)
+        {
+            var withinNative = candidates.Where(m => m.Width <= native.Width && m.Height <= native.Height).ToList();
+            if (withinNative.Count > 0)
+            {
+                candidates = withinNative;
+            }
+        }
+
         // A TV that only reaches 4K at 24-30 Hz feels laggy on a desktop; prefer its best 60 Hz mode.
         var smooth = candidates.Where(m => m.RefreshHz >= SmoothRefreshFloorHz).ToList();
         if (smooth.Count > 0)
         {
             candidates = smooth;
+        }
+
+        // The native resolution is the sharpest picture, so use it whenever it is available at a smooth rate.
+        if (native != null)
+        {
+            var atNative = candidates.Where(m => m.Width == native.Width && m.Height == native.Height).ToList();
+            if (atNative.Count > 0)
+            {
+                return atNative.OrderByDescending(m => m.RefreshHz).First();
+            }
         }
 
         if (display.PhysicalWidthMm > 0 && display.PhysicalHeightMm > 0)

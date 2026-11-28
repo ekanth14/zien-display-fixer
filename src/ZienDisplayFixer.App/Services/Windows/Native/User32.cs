@@ -29,6 +29,8 @@ public static class User32
     public const uint DISPLAY_DEVICE_MIRRORING_DRIVER = 0x00000008;
     public const uint DISPLAY_DEVICE_MODESPRUNED = 0x80000000;
 
+    public const uint EDD_GET_DEVICE_INTERFACE_NAME = 0x00000001;
+
     public const uint DM_PELSWIDTH = 0x00080000;
     public const uint DM_PELSHEIGHT = 0x00100000;
     public const uint DM_DISPLAYFREQUENCY = 0x00400000;

@@ -10,6 +10,9 @@ public record DisplayInfo
     public int PositionX { get; init; }
     public int PositionY { get; init; }
     public DisplayMode? CurrentMode { get; init; }
+
+    // The monitor's own preferred timing (EDID). Driver mode lists often go beyond it, e.g. through adapters.
+    public DisplayMode? NativeMode { get; init; }
     public double PhysicalWidthMm { get; init; }
     public double PhysicalHeightMm { get; init; }
     public ConnectionType Connection { get; init; } = ConnectionType.Unknown;

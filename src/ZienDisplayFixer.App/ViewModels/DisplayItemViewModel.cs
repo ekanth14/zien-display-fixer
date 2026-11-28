@@ -153,8 +153,9 @@ public partial class DisplayItemViewModel : ObservableObject
             ar = GetClosestAspectRatio(r);
         }
 
-        string nativeText = info.CurrentMode != null
-            ? $"{info.CurrentMode.Width} × {info.CurrentMode.Height} @ {info.CurrentMode.RefreshHz:F0}Hz"
+        var native = info.NativeMode ?? info.CurrentMode;
+        string nativeText = native != null
+            ? $"{native.Width} × {native.Height} @ {native.RefreshHz:F0}Hz"
             : "1920 × 1080 @ 60Hz";
 
         var vm = new DisplayItemViewModel

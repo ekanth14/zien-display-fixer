@@ -135,7 +135,8 @@ public partial class DisplaysViewModel : ViewModelBase
                                     PhysicalWidthMm = wMm,
                                     PhysicalHeightMm = hMm,
                                     Model = model,
-                                    Name = name
+                                    Name = name,
+                                    NativeMode = cur.NativeMode ?? parsed.PreferredMode
                                 };
                             }
                         }

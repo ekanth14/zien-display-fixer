@@ -199,7 +199,8 @@ public partial class HomeViewModel : ViewModelBase, IDisposable
                                     PhysicalWidthMm = wMm,
                                     PhysicalHeightMm = hMm,
                                     Model = model,
-                                    Name = name
+                                    Name = name,
+                                    NativeMode = current.NativeMode ?? parsed.PreferredMode
                                 };
                             }
                         }
